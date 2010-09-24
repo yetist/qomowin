@@ -1,0 +1,62 @@
+#include <windows.h>
+#include <afxres.h>
+#include "../resource.h"
+
+/* 简体中文资源 */
+
+#if !defined(AFX_RESOURCE_DLL)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+/* 版本信息 */
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x0L
+ FILEFLAGS 0x0L
+ FILEOS VOS__WINDOWS32
+ FILETYPE VFT_APP
+ FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404b0"
+        BEGIN
+            VALUE "CompanyName", "RedFlag"
+	    VALUE "FileDescription", "红旗Chinese Language for rfsetup"
+	    VALUE "FileVersion", "@PIDGIN_VERSION@"
+	    VALUE "InternalName", "pidgin"
+	    VALUE "LegalCopyright", "Copyright (C) 1998-2010 The Pidgin developer community (See the COPYRIGHT file in the source distribution)."
+	    VALUE "OriginalFilename", "language.dll"
+	    VALUE "ProductName", "ProductName"
+	    VALUE "ProductVersion", "@PIDGIN_VERSION@"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 1200
+    END
+END
+
+/* 字符串表 */
+STRINGTABLE 
+BEGIN
+    IDS_APP_CLASS	"QomoWinClass"
+    IDS_APP_TITLE	"Qomo Linux 辅助工具"
+    IDS_APP_SUMMARY	"快速、方便体验Qomo Linux"
+    IDS_APP_FRAME	"请选择"
+    IDS_APP_HD_INST	"硬盘安装：重启从启动菜单即可体验"
+    IDS_APP_HD_UNINST	"恢复到硬盘安装前设置"
+    IDS_APP_USB_INST	"制作可启动移动设备（U盘）"
+    IDS_APP_ISO_FILE	"ISO 文件(&I)："
+    IDS_APP_BROWSER	"浏览(&B)"
+    IDS_APP_CONFIRM	"确认(&C)"
+    IDS_APP_QUIT	"退出(&Q)"
+    IDS_OFN_TITLE	"请选择Qomo ISO文件..."
+
+    IDS_HELLO               "你好!"
+END
+
+#endif    // Chinese resources

@@ -1,0 +1,78 @@
+#include <windows.h>
+#include "resource.h"
+
+/* 使用XP风格界面 */
+#ifndef RT_MANIFEST
+#define RT_MANIFEST 24
+#endif
+
+#ifndef CREATEPROCESS_MANIFEST_RESOURCE_ID
+#define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
+#endif
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "qomowin.exe.manifest"
+
+/* Icons */
+
+IDI_APP_ICON		ICON			"../data/qomo-logo.ico"
+
+/* 版本信息 */
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x0L
+ FILEFLAGS 0x0L
+ FILEOS VOS__WINDOWS32
+ FILETYPE VFT_APP
+ FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404b0"
+        BEGIN
+            VALUE "CompanyName", "www.linux-wen.org"
+	    VALUE "FileDescription", "Qomo Linux Installer for Windows"
+	    VALUE "FileVersion", "@PIDGIN_VERSION@"
+	    VALUE "InternalName", "pidgin"
+	    VALUE "LegalCopyright", "Copyright (C) 1998-2010 The Pidgin developer community (See the COPYRIGHT file in the source distribution)."
+	    VALUE "OriginalFilename", "qomowin.exe"
+	    VALUE "ProductName", "ProductName"
+	    VALUE "ProductVersion", "@PIDGIN_VERSION@"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 1200
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/* 字符串表 */
+STRINGTABLE 
+BEGIN
+    IDS_APP_CLASS       "QomoWinClass"
+    IDS_APP_TITLE	"Qomo Linux Assistant Tool"
+    IDS_APP_SUMMARY	"Quickly and Easily Experience Qomo Linux"
+    IDS_APP_FRAME	"Please select"
+    IDS_APP_HD_INST	"Install From Harddisk."
+    IDS_APP_HD_UNINST	"Restored to The Pre-set."
+    IDS_APP_USB_INST	"Make Bootable Device(Mobile)."
+    IDS_APP_ISO_FILE	"&ISO Path:"
+    IDS_APP_BROWSER	"&Browser"
+    IDS_APP_CONFIRM	"&Confirm"
+    IDS_APP_QUIT	"&Quit"
+    IDS_OFN_TITLE	"Please select the Qomo ISO file..."
+
+    IDS_HELLO               "hello!"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
