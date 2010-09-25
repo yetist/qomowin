@@ -18,8 +18,8 @@ IDI_APP_ICON		ICON			"../data/qomo-logo.ico"
 
 /* 版本信息 */
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION @WINVERSION@
+ PRODUCTVERSION @WINVERSION@
  FILEFLAGSMASK 0x0L
  FILEFLAGS 0x0L
  FILEOS VOS__WINDOWS32
@@ -32,12 +32,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "www.linux-wen.org"
 	    VALUE "FileDescription", "Qomo Linux Installer for Windows"
-	    VALUE "FileVersion", "@PIDGIN_VERSION@"
+	    VALUE "FileVersion", "@VERSION@"
 	    VALUE "InternalName", "pidgin"
 	    VALUE "LegalCopyright", "Copyright (C) 1998-2010 The Pidgin developer community (See the COPYRIGHT file in the source distribution)."
 	    VALUE "OriginalFilename", "qomowin.exe"
 	    VALUE "ProductName", "ProductName"
-	    VALUE "ProductVersion", "@PIDGIN_VERSION@"
+	    VALUE "ProductVersion", "@VERSION@"
         END
     END
     BLOCK "VarFileInfo"
