@@ -1,0 +1,67 @@
+#!/bin/sh
+
+#Required programs
+nsis_url="http://downloads.sourceforge.net/project/nsis/NSIS%202/2.46/nsis-2.46-setup.exe"
+nsis_md5="5e02441c7f3fa4da4f4928a2d42a07c3"
+
+p7zip_url="http://heanet.dl.sourceforge.net/sourceforge/sevenzip/7z464.exe"
+p7zip_md5="d2810e3dd4b60ab05fe7c29a50921efa"
+
+root="$(cd ${0%/*}/../;pwd)"
+export WINEPREFIX="$root"/wine
+
+download(){
+	wget  -P /tmp -O "$2" "$1"
+	md5=$(md5sum $2)
+	md5=${md5%% *}
+	if [ ! "$md5" = "$3" ]; then
+		echo "Invalid download for $1, md5 does not match"
+		exit 1
+	fi
+}
+
+install_nsis(){
+	echo "Installing nsis..."
+	download "$nsis_url" "/tmp/nsis.exe" "$nsis_md5"
+	wine "/tmp/nsis.exe"
+}
+
+install_7z(){
+	echo "Installing 7z..."
+	download "$p7zip_url" "/tmp/p7zip.exe" "$p7zip_md5"
+	wine "/tmp/p7zip.exe"
+}
+
+install_wine(){
+	if [ ! -x /usr/bin/wine -a ! -x /usr/local/bin/wine ]; then
+		echo "Installing wine..."
+		sudo pacman -S --noconfirm wine #TBD do not assume apt
+	fi
+	#echo "Creating wine folder..."
+	#wineprefixcreate --prefix "$WINEPREFIX"
+}
+
+install_unzip(){
+	if [ ! -x /usr/bin/unzip -a ! -x /usr/local/bin/unzip ]; then
+		echo "Installing unzip..."
+		sudo pacman -S --noconfirm unzip #TBD do not assume apt
+	fi
+}
+
+install_png2ico(){
+	if [ ! -x /usr/bin/png2ico -a ! -x /usr/local/bin/png2ico ]; then
+		echo "Installing png2ico..."
+		sudo pacman -S --noconfirm png2ico #TBD do not assume apt
+	fi
+}
+
+make_wine(){
+	install_wine
+	install_nsis
+	install_png2ico
+	install_7z
+}
+
+if [ ! -e "$root/wine" ]; then
+	make_wine
+fi

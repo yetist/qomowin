@@ -1,0 +1,3 @@
+Copyright © 2010 Qomo Linux
+
+Hello, World!
