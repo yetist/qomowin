@@ -15,7 +15,7 @@
   OutFile "@PACKAGE@-@VERSION@.exe"
 
   ;Default installation folder
-  InstallDir "$LOCALAPPDATA\@PACKAGE@"
+  InstallDir "$PROGRAMFILES\@PACKAGE@"
   
   ;Get installation folder from registry if available
   InstallDirRegKey HKCU "Software\@PACKAGE@" ""

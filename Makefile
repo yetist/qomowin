@@ -34,6 +34,7 @@ qomowin:
 	sed -i 's/@PACKAGE@/$(PACKAGE)/; s/@VERSION@/$(WINVERSION1)/'       build/src/qomowin.exe.manifest
 	sed -i 's/@VERSION@/$(WINVERSION1)/; s/@WINVERSION@/$(WINVERSION2)/' build/src/*.rc
 	sed -i 's/@VERSION@/$(WINVERSION1)/; s/@WINVERSION@/$(WINVERSION2)/' build/src/locale/*.rc
+	make -C build/data
 	make -C build/src
 
 winboot2: grubutil
@@ -43,7 +44,7 @@ winboot2: grubutil
 	cd build/winboot && tar cf qomoldr.tar qomoldr.cfg
 	grub-mkimage -c build/winboot/qomoldr-bootstrap.cfg -m build/winboot/qomoldr.tar -o build/grubutil/core.img \
 		loadenv biosdisk part_msdos part_gpt fat ntfs ext2 ntfscomp iso9660 loopback search linux boot minicmd cat cpuid chain halt help ls reboot \
-		echo test configfile normal sleep memdisk tar
+		echo test configfile normal sleep memdisk tar sh
 	cat /usr/lib/grub/i386-pc/lnxboot.img build/grubutil/core.img > build/winboot/qomoldr
 
 grubutil: 
