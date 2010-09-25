@@ -23,16 +23,17 @@
 #ifndef __RESOURCE_H__ 
 #define __RESOURCE_H__  1
 
-#define IDM_HD_INST				101
-#define IDM_HD_UNINST			102
-#define IDM_USB_INST            1001
-#define IDM_BROWSER             1002
-#define IDM_CONFIRM                         1003
-#define IDM_QUIT                       1004
+#define IDC_HD_INST				101
+#define IDC_HD_UNINST			102
+#define IDC_USB_INST            103
+#define IDC_FILE_PATH			104
+#define IDC_BROWSER             105
+#define IDC_USB_LIST			106
+#define IDC_CONFIRM             107
+#define IDC_QUIT                108
 
 #define IDI_APP_ICON			2001
-#define IDS_APP_CLASS			2002
-#define IDE_FILE_PATH			2003
+#define IDS_APP_FONT			2002
 
 #define IDS_APP_TITLE			3001
 #define IDS_APP_SUMMARY			3002

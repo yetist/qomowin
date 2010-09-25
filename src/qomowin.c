@@ -40,8 +40,9 @@ HMODULE		hLangDll;		// Handle for multi language
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static BOOL InitApplication(HINSTANCE hInstance);
 static BOOL InitInstance(HINSTANCE hInstance, int nCmdShow);
-static void CreateWindowUI(HWND hwnd);
+static void CreateControls(HWND hwnd);
 static void SelectISOFile(HWND hwnd);
+static void InitControls(HWND hwnd);
 
 static void SelectISOFile(HWND hwnd)
 {
@@ -68,11 +69,11 @@ static void SelectISOFile(HWND hwnd)
 	// show the selection dialog
 	if (GetOpenFileName(&ofn) )
 	{
-		SetWindowText(GetDlgItem(hwnd, IDE_FILE_PATH), szFile);
+		SetWindowText(GetDlgItem(hwnd, IDC_FILE_PATH), szFile);
 	}
 }
 
-static void CreateWindowUI(HWND hwnd)
+static void CreateControls(HWND hwnd)
 {
 	int x, w;
 	RECT rect;
@@ -83,6 +84,7 @@ static void CreateWindowUI(HWND hwnd)
 	LOGFONT   logfont;
 	HWND hCtrl;
 	TCHAR 	szText[MAX_LOADSTRING];
+	TCHAR 	szFont[MAX_LOADSTRING];
 	HINSTANCE hInstance;
 	hInstance = GetModuleHandle(NULL);
 
@@ -91,7 +93,9 @@ static void CreateWindowUI(HWND hwnd)
 	GetTextMetrics(hdc, &tm);
 	dwCharW = 6;
 
-	lstrcpy((LPSTR) logfont.lfFaceName, (LPSTR)"SimSun Sans Serif");
+	LoadString(hLangDll, IDS_APP_FONT, szFont, MAX_LOADSTRING);
+
+	lstrcpy((LPSTR) logfont.lfFaceName, (LPSTR)szFont);
 	logfont.lfWeight=FW_NORMAL;
 	logfont.lfWidth=dwCharW;
 	logfont.lfHeight=12;
@@ -116,17 +120,20 @@ static void CreateWindowUI(HWND hwnd)
 
 	LoadString(hLangDll, IDS_APP_HD_INST, szText, MAX_LOADSTRING);
 	w = dwCharW * (strlen(szText) + 4);
-	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON | WS_TABSTOP, 75,80,w,20, hwnd,(HMENU) IDM_HD_INST , hInstance, NULL);
+	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON | WS_TABSTOP, 75,80,w,20, hwnd,(HMENU) IDC_HD_INST , hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	LoadString(hLangDll, IDS_APP_HD_UNINST, szText, MAX_LOADSTRING);
 	w = dwCharW * (strlen(szText) + 4);
-	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON | WS_TABSTOP, 75,110,w,20,hwnd,(HMENU) IDM_HD_UNINST, hInstance,   NULL);
+	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON | WS_TABSTOP, 75,110,w,20,hwnd,(HMENU) IDC_HD_UNINST, hInstance,   NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	LoadString(hLangDll, IDS_APP_USB_INST, szText, MAX_LOADSTRING);
 	w = dwCharW * (strlen(szText) + 4);
-	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON | WS_TABSTOP, 75, 140, w, 20, hwnd,(HMENU) IDM_USB_INST, hInstance,   NULL);
+	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON | WS_TABSTOP, 75, 140, w, 20, hwnd,(HMENU) IDC_USB_INST, hInstance,   NULL);
+	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
+
+	hCtrl = CreateWindow("COMBOBOX", NULL, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|CBS_DROPDOWNLIST|WS_BORDER, 75 + w,140, 60, 150, hwnd,(HMENU)IDC_USB_LIST, hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	LoadString(hLangDll, IDS_APP_ISO_FILE, szText, MAX_LOADSTRING);
@@ -134,23 +141,30 @@ static void CreateWindowUI(HWND hwnd)
 	hCtrl = CreateWindow("STATIC", szText, WS_CHILD | WS_VISIBLE |SS_LEFT | WS_TABSTOP, 50, 187, w, 120, hwnd, (HMENU)IDC_STATIC, hInstance, NULL);                          
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
-	hCtrl = CreateWindow("EDIT",NULL,WS_CHILD|WS_VISIBLE|WS_BORDER|ES_AUTOVSCROLL|ES_LEFT|ES_AUTOHSCROLL | WS_TABSTOP, 122, 185, 270, 20, hwnd,(HMENU)IDE_FILE_PATH,hInstance,NULL);
+	hCtrl = CreateWindow("EDIT",NULL,WS_CHILD|WS_VISIBLE|WS_BORDER|ES_AUTOVSCROLL|ES_LEFT|ES_AUTOHSCROLL | WS_TABSTOP, 122, 185, 270, 20, hwnd,(HMENU)IDC_FILE_PATH, hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	LoadString(hLangDll, IDS_APP_BROWSER, szText, MAX_LOADSTRING);
 	w = dwCharW * (strlen(szText) + 4);
-	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, 395,185, w,26, hwnd, (HMENU)IDM_BROWSER, hInstance, NULL);
+	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, 395,185, w, 26, hwnd, (HMENU)IDC_BROWSER, hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	LoadString(hLangDll, IDS_APP_QUIT, szText, MAX_LOADSTRING);
 	w = dwCharW * (strlen(szText) + 4);
-	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, rect.right-85, rect.bottom-33, w, 26, hwnd, (HMENU)IDM_QUIT, hInstance, NULL);   
+	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, rect.right-85, rect.bottom-33, w, 26, hwnd, (HMENU)IDC_QUIT, hInstance, NULL);   
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	LoadString(hLangDll, IDS_APP_CONFIRM, szText, MAX_LOADSTRING);
 	w = dwCharW * (strlen(szText) + 4);
-	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, rect.right-160, rect.bottom-33, w, 26, hwnd, (HMENU)IDM_CONFIRM, hInstance, NULL);
+	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, rect.right-160, rect.bottom-33, w, 26, hwnd, (HMENU)IDC_CONFIRM, hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
+}
+
+static void InitControls(HWND hwnd)
+{
+	SendMessage(GetDlgItem(hwnd, IDC_HD_INST), BM_SETCHECK, BST_CHECKED,0);
+	EnableWindow(GetDlgItem(hwnd, IDC_HD_UNINST), FALSE);
+
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -158,21 +172,22 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 	switch(msg)
 	{
 		case WM_CREATE:
-			CreateWindowUI(hwnd);
+			CreateControls(hwnd);
+			InitControls(hwnd);
 			break;
 		case WM_COMMAND:
 			switch (LOWORD(wParam))
 			{
-				case IDM_HD_INST:
-				case IDM_HD_UNINST:
-				case IDM_USB_INST:
-				case IDM_CONFIRM:
+				case IDC_HD_INST:
+				case IDC_HD_UNINST:
+				case IDC_USB_INST:
+				case IDC_CONFIRM:
 					MessageBox(hwnd, "confirm", "This program is", MB_OK | MB_ICONINFORMATION);
 					break;
-				case IDM_BROWSER:
+				case IDC_BROWSER:
 					SelectISOFile(hwnd);
 					break;
-				case IDM_QUIT:
+				case IDC_QUIT:
 					DestroyWindow(hwnd);
 					Boot(1);
 					break;
@@ -195,9 +210,6 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 static BOOL InitApplication(HINSTANCE hInstance)
 {
 	WNDCLASSEX wc;
-	TCHAR 		g_szClassName[MAX_LOADSTRING];			// The title bar text
-
-	LoadString(hLangDll, IDS_APP_CLASS, g_szClassName, MAX_LOADSTRING);
 
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -211,7 +223,7 @@ static BOOL InitApplication(HINSTANCE hInstance)
 	wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 
 	wc.lpszMenuName = NULL;
-	wc.lpszClassName = g_szClassName;
+	wc.lpszClassName = "QomoWinClass";
 	wc.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON));
 
 	return (RegisterClassEx(&wc) != 0);
@@ -221,14 +233,12 @@ static BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
 	HWND		hWndMain;
 	TCHAR 		szTitle[MAX_LOADSTRING];				// The title bar text
-	TCHAR 		g_szClassName[MAX_LOADSTRING];			// The title bar text
 
 	LoadString(hLangDll, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-	LoadString(hLangDll, IDS_APP_CLASS, g_szClassName, MAX_LOADSTRING);
 
 	hWndMain = CreateWindowEx(
 			0,
-			g_szClassName,
+			"QomoWinClass",
 			szTitle,
 			WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,
 			CW_USEDEFAULT, CW_USEDEFAULT, 500, 300,

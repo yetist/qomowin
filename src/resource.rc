@@ -58,7 +58,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 /* 字符串表 */
 STRINGTABLE 
 BEGIN
-    IDS_APP_CLASS       "QomoWinClass"
+    IDS_APP_FONT      	"MS Sans Serif"
     IDS_APP_TITLE	"Qomo Linux Assistant Tool"
     IDS_APP_SUMMARY	"Quickly and Easily Experience Qomo Linux"
     IDS_APP_FRAME	"Please select"
