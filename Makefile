@@ -37,6 +37,10 @@ grublocale:
 		lang=`echo $$i|cut -d/ -f5`; \
 		cp -f $$i nsis/boot/grub/locale/$$lang.mo; \
 		done
+	 for i in png video vga video_fb bitmap_scale font extcmd bitmap bufio gfxterm vbe gzio gettext; \
+		 do \
+		 cp /usr/lib/grub/i386-pc/$$i.mod nsis/boot/grub/; \
+		 done
 
 qomowin:
 	cp -rf data src build
