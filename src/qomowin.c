@@ -25,6 +25,8 @@
 #endif
 
 #include <windows.h>
+#include <dbt.h>
+#include <shlwapi.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
@@ -34,6 +36,11 @@
 #include "utils.h" 
 
 #define MAX_LOADSTRING	100	
+#define LANG(P,ID) \
+    TCHAR       szTemp##P##ID[MAX_LOADSTRING]; \
+    LoadString(hLangDll, IDS_##P##_##ID , szTemp##P##ID, MAX_LOADSTRING)
+
+#define MSGLANG(ID) szTempMSG##ID
 
 HMODULE		hLangDll;		// Handle for multi language
 
@@ -43,6 +50,7 @@ static BOOL InitInstance(HINSTANCE hInstance, int nCmdShow);
 static void CreateControls(HWND hwnd);
 static void SelectISOFile(HWND hwnd);
 static void InitControls(HWND hwnd);
+static void RefreshUSBList(HWND hwnd);
 
 static void SelectISOFile(HWND hwnd)
 {
@@ -160,11 +168,90 @@ static void CreateControls(HWND hwnd)
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 }
 
+static void RefreshUSBList(HWND hwnd)
+{
+	int i, count;
+	UINT type;
+	char driver[3] = "C:";
+	count = SendMessage(GetDlgItem(hwnd, IDC_USB_LIST), CB_GETCOUNT, 0, 0);
+
+	for(i=0; i<count; i++)
+	{
+		SendMessage(GetDlgItem(hwnd, IDC_USB_LIST), CB_DELETESTRING, i, 0);
+	}
+
+	for (i = 0; i < 24; i++)
+	{
+		driver[0] = 'C' + i;
+		type = GetDriveType(driver);
+		if ( type == DRIVE_REMOVABLE)
+			SendMessage(GetDlgItem(hwnd, IDC_USB_LIST), CB_ADDSTRING, 0, (LPARAM)driver) ;
+	}
+
+	count = SendMessage(GetDlgItem(hwnd, IDC_USB_LIST), CB_GETCOUNT, 0, 0);
+	if (count >0)
+		SendMessage(GetDlgItem(hwnd, IDC_USB_LIST), CB_SETCURSEL, 0, 0);
+
+	InvalidateRect(GetDlgItem(hwnd, IDC_USB_LIST), NULL, TRUE);
+}
+
 static void InitControls(HWND hwnd)
 {
-	SendMessage(GetDlgItem(hwnd, IDC_HD_INST), BM_SETCHECK, BST_CHECKED,0);
+	SendMessage(GetDlgItem(hwnd, IDC_HD_INST), BM_SETCHECK, BST_CHECKED, 0);
 	EnableWindow(GetDlgItem(hwnd, IDC_HD_UNINST), FALSE);
+	RefreshUSBList(hwnd);
+}
 
+static BOOL CheckISOFile(HWND hwnd)
+{
+	char szFile[MAX_PATH];
+	int len;
+
+	SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
+	if ((len = strlen(szFile)) < 6)
+	{
+		LANG(MSG, NOT_ISO); 
+		LANG(MSG, ERROR);
+		MessageBox(hwnd, MSGLANG(NOT_ISO), MSGLANG(ERROR), MB_OK|MB_ICONWARNING);
+	}
+	else
+	{
+		char *p = szFile + strlen(szFile) - 4 ;
+		if (strncmp(p, ".iso", 4) != 0 && strncmp(p, ".ISO", 4) != 0)
+		{
+			LANG(MSG, NOT_ISO); LANG(MSG, ERROR);
+			MessageBox(hwnd, MSGLANG(NOT_ISO), MSGLANG(ERROR), MB_OK|MB_ICONWARNING);
+		}
+		else
+		{
+			if (! PathFileExists(szFile))
+			{
+				LANG(MSG, ERROR);
+				LANG(MSG, FILE_NOT_EXISTS);
+				MessageBox(hwnd, MSGLANG(FILE_NOT_EXISTS), MSGLANG(ERROR), MB_OK|MB_ICONWARNING);
+				return FALSE;
+			}
+		}
+	}
+	return FALSE;
+}
+
+static void OnConfirm(HWND hwnd)
+{
+	CheckISOFile(hwnd);
+
+	if ( BST_CHECKED == SendMessage(GetDlgItem(hwnd, IDC_HD_INST), BM_GETCHECK, 0, 0))
+	{
+		MessageBox(hwnd, "select hdisk installer", "This program is", MB_OK | MB_ICONINFORMATION);
+	}
+	else if ( BST_CHECKED == SendMessage(GetDlgItem(hwnd, IDC_HD_UNINST), BM_GETCHECK, 0, 0))
+	{
+		MessageBox(hwnd, "select hdisk uninstaller", "This program is", MB_OK | MB_ICONINFORMATION);
+	}
+	else if ( BST_CHECKED == SendMessage(GetDlgItem(hwnd, IDC_USB_INST), BM_GETCHECK, 0, 0))
+	{
+		MessageBox(hwnd, "select usb disk installer", "This program is", MB_OK | MB_ICONINFORMATION);
+	}
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -178,11 +265,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case WM_COMMAND:
 			switch (LOWORD(wParam))
 			{
+				/*
 				case IDC_HD_INST:
 				case IDC_HD_UNINST:
 				case IDC_USB_INST:
+					break;
+					*/
 				case IDC_CONFIRM:
-					MessageBox(hwnd, "confirm", "This program is", MB_OK | MB_ICONINFORMATION);
+					OnConfirm(hwnd);
 					break;
 				case IDC_BROWSER:
 					SelectISOFile(hwnd);
@@ -193,6 +283,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 					break;
 				default:
 					return (DefWindowProc(hwnd, msg, wParam, lParam));
+			}
+			break;
+		case WM_DEVICECHANGE:
+			{
+				RefreshUSBList(hwnd);
 			}
 			break;
 		case WM_CLOSE:

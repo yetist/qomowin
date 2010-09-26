@@ -7,7 +7,7 @@ WINDRES := i486-mingw32-windres
 WINE := ../tools/wine
 
 WINAPP := -mwindows
-LDFLAGS := $(WINAPP)
+LDFLAGS := $(WINAPP) -lshlwapi
 
 EXE_TARGET := qomowin
 EXE_NAME := $(EXE_TARGET).exe
@@ -20,7 +20,7 @@ EXE_OBJECTS = $(EXE_C_SRC:%.c=%.o) $(EXE_RC_SRC:%.rc=%.o)
 all: $(EXE_NAME) locale
 
 $(EXE_NAME): $(EXE_OBJECTS)
-	$(CC) $(LDFLAGS) $(EXE_OBJECTS) -o $(EXE_NAME)
+	$(CC) $(EXE_OBJECTS) -o $(EXE_NAME) $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -o $@ -c $<

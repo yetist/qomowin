@@ -56,6 +56,10 @@ BEGIN
     IDS_APP_QUIT	"退出(&Q)"
     IDS_OFN_TITLE	"请选择Qomo ISO文件..."
 
+    IDS_MSG_ERROR		"错误"
+    IDS_MSG_WARNING		"警告"
+    IDS_MSG_NOT_ISO		"请选择一个正确的ISO文件"
+    IDS_MSG_FILE_NOT_EXISTS	"您选择的文件不存在！"
     IDS_HELLO               "你好!"
 END
 

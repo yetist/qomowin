@@ -47,7 +47,11 @@
 #define IDS_APP_QUIT			3011
 #define IDS_OFN_TITLE			3012
 
-#define IDS_HELLO			4003
+#define IDS_MSG_ERROR			4001
+#define IDS_MSG_WARNING			4002
+#define IDS_MSG_NOT_ISO			4003
+#define IDS_MSG_FILE_NOT_EXISTS	4004
+#define IDS_HELLO				4005
 
 #endif /* __RESOURCE_H__ */
 
