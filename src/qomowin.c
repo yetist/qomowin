@@ -42,7 +42,6 @@
 
 #define MSGLANG(ID) szTempMSG##ID
 
-HMODULE		hLangDll;		// Handle for multi language
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static BOOL InitApplication(HINSTANCE hInstance);
@@ -51,6 +50,7 @@ static void CreateControls(HWND hwnd);
 static void SelectISOFile(HWND hwnd);
 static void InitControls(HWND hwnd);
 static void RefreshUSBList(HWND hwnd);
+static void InstallMbr(HWND hwnd);
 
 static void SelectISOFile(HWND hwnd)
 {
@@ -236,6 +236,49 @@ static BOOL CheckISOFile(HWND hwnd)
 	return FALSE;
 }
 
+static void InstallMbr(HWND hwnd)
+{
+	OSVERSIONINFO   versionInfo;
+	versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+
+	//   获得版本信息
+	if (!GetVersionEx (&versionInfo))
+	{
+		MessageBox(hwnd, "Not get version info", "OS", MB_OK|MB_ICONWARNING);
+		return;
+	}
+	 
+	/*	
+	 *	OS VERSION TABLE
+	 *  OSName  | dwPlatformID | dwMajorVersion | dwMinorVersion | dwBuildNumber
+	 *  95      | 1 | 4 | 0    | 950
+	 *  95 SP1  | 1 | 4 | 0    | > 950 && <= 1080
+	 *  95 OSR2 | 1 | 4 | < 10 | > 1080
+	 *  98      | 1 | 4 | 10   | 1998
+	 *  98 SP1  | 1 | 4 | 10   | >1998 && < 2183
+	 *  98 SE   | 1 | 4 | 10   | >= 2183
+	 *  Me      | 1 | 4 | 90   | 3000
+	 *  NT 3.51 | 2 | 3 | 51   | 1057
+	 *  NT 4    | 2 | 4 | 0    | 1381
+	 *  2000    | 2 | 5 | 0    | 2195
+	 *  XP      | 2 | 5 | 1    |
+	 *  2003    | 2 | 5 | 2    |
+	 *  CE 1.0  | 3 | 1 | 0    |
+	 *  CE 2.0  | 3 | 2 | 0    |
+	 *  CE 2.1  | 3 | 2 | 1    |
+	 *  CE 3.0  | 3 | 3 | 0    |
+	 *  Vista   |   | 6 | 0    |
+	 *  Win7    |   | 6 | 1    |
+	 *  */
+	if (versionInfo.dwMajorVersion == 5) /* Support 2000, XP, 2003 */
+	{
+		MessageBox(hwnd, "NTLDR", "OS", MB_OK|MB_ICONWARNING);
+		CheckNtLdr(hwnd);
+	}
+	else if (versionInfo.dwMajorVersion == 6) /* Support Vista, Win7 */
+		MessageBox(hwnd, "bootMgr", "OS", MB_OK|MB_ICONWARNING);
+}
+
 static void OnConfirm(HWND hwnd)
 {
 	CheckISOFile(hwnd);
@@ -252,6 +295,7 @@ static void OnConfirm(HWND hwnd)
 	{
 		MessageBox(hwnd, "select usb disk installer", "This program is", MB_OK | MB_ICONINFORMATION);
 	}
+	InstallMbr(hwnd);
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)

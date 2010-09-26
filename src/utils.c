@@ -19,6 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * */
 
+#include <shlwapi.h>
+#include "qomowin.h"
+#include "resource.h"
 #include "utils.h"
 
 static char* winpidgin_lcid_to_posix(LCID lcid);
@@ -184,7 +187,7 @@ const char *winpidgin_get_locale(void)
 	return "en";
 }
 
-HMODULE		LoadLangDll(const char* locale)
+HMODULE	LoadLangDll(const char* locale)
 {
 	char 		DllPath[MAX_PATH];
 	HMODULE		hDLL;
@@ -252,6 +255,160 @@ int Boot(int reboot)
 	}
 
 	return 1;
+}
+
+void PrintError(HWND hwnd, TCHAR* msg)
+{
+  DWORD eNum;
+  TCHAR sysMsg[BUFSIZ];
+  TCHAR showmsg[BUFSIZ];
+  TCHAR* p;
+  TCHAR szTitle[BUFSIZ];
+
+  LoadString(hLangDll, IDS_MSG_ERROR, szTitle, BUFSIZ);
+
+  eNum = GetLastError();
+  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+         NULL, eNum,
+         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+         sysMsg, 256, NULL );
+
+  /* 去掉末尾的换行符号 */
+  p = sysMsg;
+  while(p && (*p))
+	  ++p;
+
+  do {
+	  *p-- = '\0'; 
+  } while(( p >= sysMsg ) && (( *p == '\r' ) || (*p == '\n')));
+
+  // Display the message
+  sprintf(showmsg, "%s\n[ErrorID=%ld]%s", msg, eNum, sysMsg);
+  MessageBox(hwnd, showmsg, szTitle, MB_OK | MB_ICONWARNING);
+}
+
+BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver)
+{
+	/* sysDriver = "X:\" */
+	char *p, srcFileName[MAX_PATH], dstFileName[MAX_PATH];
+	DWORD dwAttrs;
+
+	HINSTANCE hInstance = GetModuleHandle(NULL);
+	GetModuleFileName(hInstance, srcFileName, MAX_PATH);
+
+	p = strrchr(srcFileName, '\\');
+	*p = '\0';
+
+	/* Copy qomoldr.mbr file */
+	strcat(srcFileName, "\\winboot\\qomoldr");
+	snprintf(dstFileName, MAX_PATH, "%sqomoldr", sysDriver);
+	dwAttrs = GetFileAttributes(dstFileName); 
+	if (dwAttrs==INVALID_FILE_ATTRIBUTES) dwAttrs = FILE_ATTRIBUTE_READONLY;
+	if (dwAttrs & FILE_ATTRIBUTE_READONLY || dwAttrs & FILE_ATTRIBUTE_HIDDEN)
+	{ 
+		SetFileAttributes(dstFileName, dwAttrs & ~FILE_ATTRIBUTE_READONLY & ~FILE_ATTRIBUTE_HIDDEN); 
+	}
+	if (!CopyFile(srcFileName, dstFileName, FALSE))
+	{
+		PrintError(hwnd, "Copyfile qomoldr error!");
+		return FALSE;
+	}
+	if (!SetFileAttributes(dstFileName, dwAttrs | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN))
+		PrintError(hwnd, "SetFileAttributes Failed");
+
+	/* Copy qomoldr.mbr file */
+	strcat(srcFileName, ".mbr");
+	strcat(dstFileName, ".mbr");
+	dwAttrs = GetFileAttributes(dstFileName);
+	if (dwAttrs==INVALID_FILE_ATTRIBUTES) dwAttrs = FILE_ATTRIBUTE_READONLY;
+	if (dwAttrs & FILE_ATTRIBUTE_READONLY || dwAttrs & FILE_ATTRIBUTE_HIDDEN)
+	{ 
+		SetFileAttributes(dstFileName, dwAttrs & ~FILE_ATTRIBUTE_READONLY & ~FILE_ATTRIBUTE_HIDDEN); 
+	}
+	if (!CopyFile(srcFileName, dstFileName, FALSE))
+	{
+		PrintError(hwnd, "Copyfile qomoldr.mbr error!");
+		return FALSE;
+	}
+	if (!SetFileAttributes(dstFileName, dwAttrs | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN))
+		PrintError(hwnd, "SetFileAttributes Failed");
+	return TRUE;
+}
+
+BOOL CheckNtLdr(HWND hwnd)
+{
+	char bootIni[BUFSIZ], *p;
+	int isInstalled = 0;
+
+	/* 得到系统盘根目录的 X:/boot.ini 文件 */
+	if(!GetSystemDirectory(bootIni, BUFSIZ))
+	{
+		PrintError(hwnd, "GetSystemDirectory Failed!"); 
+		return FALSE;
+	}
+	p = bootIni + 3;
+	memset(p, '\0', BUFSIZ - 3);
+	strncpy(p, "boot.ini", 8);
+
+	if (PathFileExists(bootIni))  /* 检查 X:/boot.ini 文件 */
+	{
+		unsigned int readCount;
+		char  keys[BUFSIZ];
+		char *p;
+
+		readCount= GetPrivateProfileSection("operating systems", keys, BUFSIZ, bootIni);
+		p = keys;
+		while (p < (keys + readCount))
+		{
+			printf("->[%s]\n", p);
+			if (strstr(p, "\\qomoldr.mbr") != NULL)
+			{
+				isInstalled = 1;
+				break;
+			}
+			p = p + strlen(p) + 1;
+		}
+
+		if (!isInstalled) /* 在 X:/boot.ini 文件中未发现qomoldr.mbr引导项 */
+		{
+			char key[20];
+			DWORD dwAttrs;
+			memset(key, '\0', sizeof(key));
+			strncpy(key, bootIni, 3);		/* 这里key="X:\" */
+			if (! CopyMbrFiles(hwnd, key))
+				return FALSE;
+			strcat(key, "qomoldr.mbr");		/* 这里 key = "X:\qomoldr.mbr" */
+
+			dwAttrs = GetFileAttributes(bootIni); 
+			if (dwAttrs==INVALID_FILE_ATTRIBUTES)
+				return FALSE;
+
+			if (dwAttrs & FILE_ATTRIBUTE_READONLY)
+			{ 
+				SetFileAttributes(bootIni, dwAttrs & ~FILE_ATTRIBUTE_READONLY); 
+			} 
+			if (!WritePrivateProfileString("operating systems", key, "Qomo Linux", bootIni)) 
+			{
+				PrintError(hwnd, "Modify boot.ini file failed!");
+				return FALSE;
+			} else {
+				SetFileAttributes(bootIni, dwAttrs); 
+				return TRUE;
+			}
+		}
+		else
+		{
+			/* qomoldr.mbr引导项已经安装在 X:/boot.ini 文件中 */
+			return TRUE;
+		}
+	}
+	else 
+	{
+		/* 在2000、XP、2003系统上看起来丢失了/boot.ini文件，这通常不太可能，如果真的发生了，系统应该已经无法启动了，
+		 * 所以，这种情况下已经完全没有必要去增加QomoWin的引导项了，直接返回FALSE */
+		MessageBox(hwnd, "Your OS looks like has some errors, lost the boot.ini file.", "qomoldr.mbr", MB_OK|MB_ICONWARNING);
+		return FALSE;
+	}
 }
 
 /*

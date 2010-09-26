@@ -21,8 +21,9 @@
 
 #ifndef __QOMOWIN_H__ 
 #define __QOMOWIN_H__  1
+#include <windows.h>
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
+HMODULE		hLangDll;		// Handle for multi language
 
 #endif /* __QOMOWIN_H__ */
 
