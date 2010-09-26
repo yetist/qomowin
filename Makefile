@@ -22,12 +22,21 @@ setup: qomowin-pre-setup
 wubizip: qomowin-pre-setup
 	cd nsis; zip -r wubi.zip wubi
 
-qomowin-pre-setup: check_wine qomowin winboot2
+qomowin-pre-setup: check_wine qomowin winboot2 grublocale
 	rm -rf dist; mkdir -p dist/{locale,bin}
 	cp -f wine/drive_c/Program\ Files/7-Zip/7z.{exe,dll} dist/bin
 	cp build/src/locale/*dll dist/locale
 	cp -rf build/src/*.exe build/winboot nsis/* dist
 	rm -rf build/{winboot,src,data}
+
+grublocale:
+	[ -f nsis/boot/grub/unicode.pf2 ] || cp -f /usr/share/grub/unicode.pf2 nsis/boot/grub
+	[ -d nsis/boot/grub/locale ] || mkdir -p nsis/boot/grub/locale
+	for i in /usr/share/locale/*/LC_MESSAGES/grub.mo; \
+		do \
+		lang=`echo $$i|cut -d/ -f5`; \
+		cp -f $$i nsis/boot/grub/locale/$$lang.mo; \
+		done
 
 qomowin:
 	cp -rf data src build
