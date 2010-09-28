@@ -7,27 +7,25 @@
   !define PRODUCT_PACKAGE "@PACKAGE@"
   !define PRODUCT_VERSION "@VERSION@"
   !define VERSION_DOT "@WINVERSION@"
+  !define HOME_URL "http://www.linux-ren.org"
+  !define GIT_URL "http://git.linux-ren.org/qomowin"
   !define MUI_ICON "${NSISDIR}\\Contrib\Graphics\Icons\orange-install.ico"
   !define MUI_UNICON "${NSISDIR}\\Contrib\Graphics\Icons\orange-uninstall.ico"
 
 ;--------------------------------
 ;General
-  Name "${PRODUCT_PACKAGE}"
+  Name "QomoWin"
   OutFile "${PRODUCT_PACKAGE}-${PRODUCT_VERSION}.exe"
-
   InstallDir "$PROGRAMFILES\${PRODUCT_PACKAGE}"
-
   InstallDirRegKey HKCU "Software\${PRODUCT_PACKAGE}" ""
   RequestExecutionLevel admin
+
   SetOverwrite on
   SetCompress auto
   SetCompressor /SOLID lzma
-  ; 设置数据块优化
   SetDatablockOptimize on
-  ; 设置数据写入时间
   SetDateSave on
-  BrandingText /TRIMCENTER "http://www.linux-ren.org"
-
+  BrandingText /TRIMCENTER "Powered by http://www.linux-ren.org "
 ;--------------------------------
 ;Variables
 
@@ -40,7 +38,6 @@
 
 ;--------------------------------
 ;Language Selection Dialog Settings
-
   ;Remember the installer language
   !define MUI_LANGDLL_REGISTRY_ROOT "HKCU" 
   !define MUI_LANGDLL_REGISTRY_KEY "Software\${PRODUCT_PACKAGE}" 
@@ -50,8 +47,6 @@
 ;Pages
 
   !insertmacro MUI_PAGE_LICENSE "License.txt"
-  !insertmacro MUI_PAGE_COMPONENTS
-  ;!insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
   !insertmacro MUI_PAGE_STARTMENU Application $StartMenuFolder
   
@@ -60,34 +55,38 @@
 
 ;--------------------------------
 ;Languages
-
   !insertmacro MUI_LANGUAGE "English" ;first language is the default language
   !insertmacro MUI_LANGUAGE "SimpChinese"
   !include "mylang.nsh"
+
+;--------------------------------
+;Reserve Files
+  !insertmacro MUI_RESERVEFILE_LANGDLL
+
 ;--------------------------------
 ;Version Information
 
   VIProductVersion "${VERSION_DOT}"
-  VIAddVersionKey /LANG=${LANG_ENGLISH}     "ProductName" $(_lang_productname)
-  VIAddVersionKey /LANG=${LANG_ENGLISH}     "Comments" $(_lang_comments)
-  VIAddVersionKey /LANG=${LANG_ENGLISH}     "CompanyName" $(_lang_companyname)
-  VIAddVersionKey /LANG=${LANG_ENGLISH}     "LegalTrademarks" $(_lang_legaltrademarks)
-  VIAddVersionKey /LANG=${LANG_ENGLISH}     "LegalCopyright" $(_lang_legalcopyright)
-  VIAddVersionKey /LANG=${LANG_ENGLISH}     "FileDescription" ${_lang_filedescription}
+  VIAddVersionKey /LANG=${LANG_ENGLISH}     "ProductName" "QomoWin"
+  VIAddVersionKey /LANG=${LANG_ENGLISH}     "Comments" "Qomo Installer"
+  VIAddVersionKey /LANG=${LANG_ENGLISH}     "CompanyName" "Linux Ren Open Source Community"
+  VIAddVersionKey /LANG=${LANG_ENGLISH}     "LegalTrademarks" "trademarks"
+  VIAddVersionKey /LANG=${LANG_ENGLISH}     "LegalCopyright" "Copyright (r) Linux Ren Open Source Community"
+  VIAddVersionKey /LANG=${LANG_ENGLISH}     "FileDescription" "Qomo Linux installer for Windows"
   VIAddVersionKey /LANG=${LANG_ENGLISH}     "FileVersion" "${PRODUCT_VERSION}"
-;--------------------------------
-;Reserve Files
-  
-  ;If you are using solid compression, files that are required before
-  ;the actual installation should be stored first in the data block,
-  ;because this will make your installer start faster.
-  
-  !insertmacro MUI_RESERVEFILE_LANGDLL
+
+  VIAddVersionKey /LANG=${LANG_SIMPCHINESE}     "ProductName" "QomoWin"
+  VIAddVersionKey /LANG=${LANG_SIMPCHINESE}     "Comments" "Qomo Linux 安装程序"
+  VIAddVersionKey /LANG=${LANG_SIMPCHINESE}     "CompanyName" "Linux人开源社区"
+  VIAddVersionKey /LANG=${LANG_SIMPCHINESE}     "LegalTrademarks" "trademarks"
+  VIAddVersionKey /LANG=${LANG_SIMPCHINESE}     "LegalCopyright" "Copyright (r) Linux人开源社区"
+  VIAddVersionKey /LANG=${LANG_SIMPCHINESE}     "FileDescription" "Qomo Linux 安装程序"
+  VIAddVersionKey /LANG=${LANG_SIMPCHINESE}     "FileVersion" "${PRODUCT_VERSION}"
 
 ;--------------------------------
 ;Installer Sections
 
-Section "Core Section" SecCore
+Section
 
   SectionIn RO 
 
@@ -103,61 +102,62 @@ Section "Core Section" SecCore
   WriteRegStr HKCU "Software\${PRODUCT_PACKAGE}" "" $INSTDIR
   
   ;Create uninstaller
-  WriteUninstaller "$INSTDIR\Uninstall.exe"
+  WriteUninstaller "$INSTDIR\uninstall.exe"
 
   !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
 
   ;Create shortcuts
-
   CreateDirectory "$SMPROGRAMS\$StartMenuFolder"
-  CreateShortCut "$DESKTOP\qomowin.lnk" "$INSTDIR\qomowin.exe" \
-	  "" "" "" SW_SHOWNORMAL "" $(_lang_Qomowin)
-  CreateShortCut "$SMPROGRAMS\$StartMenuFolder\qomowin.lnk" "$INSTDIR\qomowin.exe" \
-	  "" "" "" SW_SHOWNORMAL "" $(_lang_Qomowin)
-  CreateShortCut "$SMPROGRAMS\$StartMenuFolder\Uninstall.lnk" "$INSTDIR\Uninstall.exe" \
-	  "" "" "" SW_SHOWNORMAL ""  $(_lang_Uninstall)
+  CreateShortCut "$DESKTOP\$(_lang_qomowin).lnk" "$INSTDIR\qomowin.exe" \
+	  "" "" "" SW_SHOWNORMAL "" $(_lang_qomowin_desc)
+  CreateShortCut "$SMPROGRAMS\$StartMenuFolder\$(_lang_qomowin).lnk" "$INSTDIR\qomowin.exe" \
+	  "" "" "" SW_SHOWNORMAL "" $(_lang_qomowin_desc)
+  CreateShortCut "$SMPROGRAMS\$StartMenuFolder\$(_lang_uninstall).lnk" "$INSTDIR\uninstall.exe" \
+	  "" "" "" SW_SHOWNORMAL ""  $(_lang_uninstall_desc)
 
   !insertmacro MUI_STARTMENU_WRITE_END
 
+  ; Add uninstall information to Add/Remove Programs
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_PACKAGE}" \
+	  "DisplayName" "QomoWin"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_PACKAGE}" \
+	  "DisplayIcon" "$INSTDIR\qomowin.exe"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_PACKAGE}" \
+	  "DisplayVersion" "${PRODUCT_VERSION}"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_PACKAGE}" \
+	  "Publisher" "Linux Ren Open Source Comminuty"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_PACKAGE}" \
+	  "UrlInfoAbout" "${HOME_URL}"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_PACKAGE}" \
+	  "HelpLink" "${HOME_URL}"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_PACKAGE}" \
+	  "UrlUpdateInfo" "${GIT_URL}"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_PACKAGE}" \
+	  "Readme" "$INSTDIR\README.html"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_PACKAGE}" \
+	  "UninstallString" "$INSTDIR\uninstall.exe"
+
 SectionEnd
 
-;--------------------------------
-;Installer Functions
-
-;Function .onInit
-;
-;  !insertmacro MUI_LANGDLL_DISPLAY
-;
-;FunctionEnd
-
-;--------------------------------
-;Descriptions
-
-  ;USE A LANGUAGE STRING IF YOU WANT YOUR DESCRIPTIONS TO BE LANGAUGE SPECIFIC
-
-  ;Language strings
-
-  ;Assign language strings to sections
-  !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-    !insertmacro MUI_DESCRIPTION_TEXT ${SecCore} $(_lang_SecCore)
-  !insertmacro MUI_FUNCTION_DESCRIPTION_END
- 
 ;--------------------------------
 ;Uninstaller Section
 
 Section "Uninstall"
 
-  Delete "$INSTDIR\Uninstall.exe"
+  Delete "$INSTDIR\uninstall.exe"
 
   RMDir /r "$INSTDIR"
 
   !insertmacro MUI_STARTMENU_GETFOLDER Application $StartMenuFolder
 
-  Delete "$SMPROGRAMS\$StartMenuFolder\qomowin.lnk"
-  Delete "$SMPROGRAMS\$StartMenuFolder\Uninstall.lnk"
+  Delete "$DESKTOP\$(_lang_qomowin).lnk"
+  Delete "$SMPROGRAMS\$StartMenuFolder\$(_lang_qomowin).lnk"
+  Delete "$SMPROGRAMS\$StartMenuFolder\$(_lang_uninstall).lnk"
+
   RMDir "$SMPROGRAMS\$StartMenuFolder"
 
   DeleteRegKey /ifempty HKCU "Software\${PRODUCT_PACKAGE}"
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_PACKAGE}"
 
 SectionEnd
 
@@ -169,3 +169,10 @@ Function un.onInit
   !insertmacro MUI_UNGETLANGUAGE
   
 FunctionEnd
+
+Function .onInstSuccess
+  MessageBox MB_YESNO $(_lang_runitnow) IDNO skip
+  Exec "$INSTDIR\qomowin.exe"
+  skip:
+FunctionEnd
+

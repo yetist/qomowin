@@ -13,6 +13,8 @@ EMAIL = yetist@gmail.com
 all: setup
 
 setup: qomowin-pre-setup
+	iconv -f utf-8 -t gb18030 nsis/qomowin-setup.nsi -o dist/qomowin-setup.nsi
+	iconv -f utf-8 -t gb18030 nsis/mylang.nsh -o dist/mylang.nsh
 	sed -i 's/@PACKAGE@/$(PACKAGE)/; s/@VERSION@/$(VERSION)/; s/@WINVERSION@/$(WINVERSION1)/'       dist/qomowin-setup.nsi
 	tools/makensis dist/qomowin-setup.nsi
 	mv dist/$(PACKAGE)-$(VERSION).exe .
