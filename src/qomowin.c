@@ -205,30 +205,31 @@ static void InitControls(HWND hwnd)
 static BOOL CheckISOFile(HWND hwnd)
 {
 	char szFile[MAX_PATH];
+	char szMsgNotIso[MAX_LOADSTRING];
+	char szMsgError[MAX_LOADSTRING];
+	char szMsgFileNotExists[MAX_LOADSTRING];
 	int len;
 
 	SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
+	LoadString(hLangDll, IDS_MSG_ERROR, szMsgError, MAX_LOADSTRING);
+	LoadString(hLangDll, IDS_MSG_NOT_ISO, szMsgNotIso, MAX_LOADSTRING);
 	if ((len = strlen(szFile)) < 6)
 	{
-		LANG(MSG, NOT_ISO); 
-		LANG(MSG, ERROR);
-		MessageBox(hwnd, MSGLANG(NOT_ISO), MSGLANG(ERROR), MB_OK|MB_ICONWARNING);
+		MessageBox(hwnd, szMsgNotIso, szMsgError, MB_OK|MB_ICONWARNING);
 	}
 	else
 	{
 		char *p = szFile + strlen(szFile) - 4 ;
 		if (strncmp(p, ".iso", 4) != 0 && strncmp(p, ".ISO", 4) != 0)
 		{
-			LANG(MSG, NOT_ISO); LANG(MSG, ERROR);
-			MessageBox(hwnd, MSGLANG(NOT_ISO), MSGLANG(ERROR), MB_OK|MB_ICONWARNING);
+			MessageBox(hwnd, szMsgNotIso, szMsgError, MB_OK|MB_ICONWARNING);
 		}
 		else
 		{
 			if (! PathFileExists(szFile))
 			{
-				LANG(MSG, ERROR);
-				LANG(MSG, FILE_NOT_EXISTS);
-				MessageBox(hwnd, MSGLANG(FILE_NOT_EXISTS), MSGLANG(ERROR), MB_OK|MB_ICONWARNING);
+				LoadString(hLangDll, IDS_MSG_FILE_NOT_EXISTS, szMsgFileNotExists, MAX_LOADSTRING);
+				MessageBox(hwnd, szMsgFileNotExists, szMsgError, MB_OK|MB_ICONWARNING);
 				return FALSE;
 			}
 		}
@@ -282,6 +283,7 @@ static void InstallMbr(HWND hwnd)
 static void OnConfirm(HWND hwnd)
 {
 	CheckISOFile(hwnd);
+	ExtractISO(hwnd);
 
 	if ( BST_CHECKED == SendMessage(GetDlgItem(hwnd, IDC_HD_INST), BM_GETCHECK, 0, 0))
 	{
@@ -295,7 +297,8 @@ static void OnConfirm(HWND hwnd)
 	{
 		MessageBox(hwnd, "select usb disk installer", "This program is", MB_OK | MB_ICONINFORMATION);
 	}
-	InstallMbr(hwnd);
+
+//	InstallMbr(hwnd);
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -405,13 +408,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if( hLangDll == NULL ) hLangDll = hInstance;
 	GetPrivileges();
 
-	if (! InitApplication(hInstance))
+	if (!InitApplication(hInstance))
 	{
 		MessageBox(NULL, "Window Registration Failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
 		return FALSE;
 	}
 
-	if (! InitInstance(hInstance, nCmdShow))
+	if (!InitInstance(hInstance, nCmdShow))
 	{
 		MessageBox(NULL, "Init Window Failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
 		return FALSE;

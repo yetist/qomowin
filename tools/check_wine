@@ -41,6 +41,13 @@ install_wine(){
 	#wineprefixcreate --prefix "$WINEPREFIX"
 }
 
+install_zip(){
+	if [ ! -x /usr/bin/zip -a ! -x /usr/local/bin/zip ]; then
+		echo "Installing zip..."
+		sudo pacman -S --noconfirm zip #TBD do not assume apt
+	fi
+}
+
 install_unzip(){
 	if [ ! -x /usr/bin/unzip -a ! -x /usr/local/bin/unzip ]; then
 		echo "Installing unzip..."
@@ -59,6 +66,7 @@ make_wine(){
 	install_wine
 	install_nsis
 	install_png2ico
+	install_zip
 	install_7z
 }
 

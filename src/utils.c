@@ -25,6 +25,7 @@
 #include "utils.h"
 
 static char* winpidgin_lcid_to_posix(LCID lcid);
+static BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver);
 
 static char* winpidgin_lcid_to_posix(LCID lcid) 
 {
@@ -287,17 +288,43 @@ void PrintError(HWND hwnd, TCHAR* msg)
   MessageBox(hwnd, showmsg, szTitle, MB_OK | MB_ICONWARNING);
 }
 
-BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver)
+/**
+ * getExeDir:
+ * @path: 将被填充为路径
+ *
+ * 得到可执行文件Qomowin.exe的绝对路径
+ *
+ * */
+BOOL getExeDir(char* path)
+{
+	char *p, modFileName[MAX_PATH];
+
+	HINSTANCE hInstance = GetModuleHandle(NULL);
+	if (hInstance == NULL)
+		return FALSE;
+	if ( GetModuleFileName(hInstance, modFileName, MAX_PATH) != 0)
+	{
+		p = strrchr(modFileName, '\\');
+		*p = '\0';
+		strcpy(path, modFileName);
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
+static BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver)
 {
 	/* sysDriver = "X:\" */
 	char *p, srcFileName[MAX_PATH], dstFileName[MAX_PATH];
 	DWORD dwAttrs;
 
-	HINSTANCE hInstance = GetModuleHandle(NULL);
-	GetModuleFileName(hInstance, srcFileName, MAX_PATH);
-
-	p = strrchr(srcFileName, '\\');
-	*p = '\0';
+	if (!GetExeDir(srcFileName))
+	{
+		return FALSE;
+	}
 
 	/* Copy qomoldr.mbr file */
 	strcat(srcFileName, "\\winboot\\qomoldr");
@@ -335,6 +362,27 @@ BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver)
 	return TRUE;
 }
 
+BOOL ExtractISO(HWND hwnd)
+{
+	char szFile[MAX_PATH];
+	char cwd[MAX_PATH];
+
+	/* 7z 提取命令：
+	 * 7z e -o/tmp/ ~/Qomo1.iso isolinux/initrd0.img
+	 * 将~/Qomo1.iso中的文件isolinux/initrd0.img解压到/tmp目录中
+	 * */
+
+	if (getExeDir(cwd))
+	{
+		strcat(cwd, "\\boot");
+		SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
 BOOL CheckNtLdr(HWND hwnd)
 {
 	char bootIni[BUFSIZ], *p;
@@ -357,7 +405,7 @@ BOOL CheckNtLdr(HWND hwnd)
 		char *p;
 
 		readCount= GetPrivateProfileSection("operating systems", keys, BUFSIZ, bootIni);
-		p = keys;
+		p = keys; 	/* keys="name1=value1\0name2=value2\0name3=value3\0...\0\0" */
 		while (p < (keys + readCount))
 		{
 			printf("->[%s]\n", p);

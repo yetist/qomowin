@@ -10,9 +10,7 @@ COPYRIGHTYEAR = 2010
 AUTHOR = Wu Xiaotian
 EMAIL = yetist@gmail.com
 
-all: build
-
-build: setup
+all: setup
 
 setup: qomowin-pre-setup
 	sed -i 's/@PACKAGE@/$(PACKAGE)/; s/@VERSION@/$(VERSION)/'       dist/qomowin-setup.nsi

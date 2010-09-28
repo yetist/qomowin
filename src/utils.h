@@ -27,9 +27,11 @@
 HMODULE		LoadLangDll(const char* locale);
 const char * winpidgin_get_locale(void);
 BOOL GetPrivileges(void);
+BOOL getExeDir(char* path);
 int Boot(int reboot);
 void PrintError(HWND hwnd, TCHAR* msg);
 BOOL CheckNtLdr(HWND hwnd);
+BOOL ExtractISO(HWND hwnd);
 
 #endif /* __UTILS_H__ */
 
