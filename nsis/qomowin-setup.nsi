@@ -1,6 +1,7 @@
 ;--------------------------------
 ;Include
   !include "MUI2.nsh"
+  !include "WinVer.nsh"
 
 ;--------------------------------
 ;Define
@@ -104,9 +105,8 @@ Section
   ;Create uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
 
-  !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-
   ;Create shortcuts
+  !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
   CreateDirectory "$SMPROGRAMS\$StartMenuFolder"
   CreateShortCut "$DESKTOP\$(_lang_qomowin).lnk" "$INSTDIR\qomowin.exe" \
 	  "" "" "" SW_SHOWNORMAL "" $(_lang_qomowin_desc)
@@ -114,7 +114,6 @@ Section
 	  "" "" "" SW_SHOWNORMAL "" $(_lang_qomowin_desc)
   CreateShortCut "$SMPROGRAMS\$StartMenuFolder\$(_lang_uninstall).lnk" "$INSTDIR\uninstall.exe" \
 	  "" "" "" SW_SHOWNORMAL ""  $(_lang_uninstall_desc)
-
   !insertmacro MUI_STARTMENU_WRITE_END
 
   ; Add uninstall information to Add/Remove Programs
@@ -153,7 +152,6 @@ Section "Uninstall"
   Delete "$DESKTOP\$(_lang_qomowin).lnk"
   Delete "$SMPROGRAMS\$StartMenuFolder\$(_lang_qomowin).lnk"
   Delete "$SMPROGRAMS\$StartMenuFolder\$(_lang_uninstall).lnk"
-
   RMDir "$SMPROGRAMS\$StartMenuFolder"
 
   DeleteRegKey /ifempty HKCU "Software\${PRODUCT_PACKAGE}"
@@ -162,17 +160,33 @@ Section "Uninstall"
 SectionEnd
 
 ;--------------------------------
-;Uninstaller Functions
-
-Function un.onInit
-
-  !insertmacro MUI_UNGETLANGUAGE
-  
-FunctionEnd
+;installer Functions
 
 Function .onInstSuccess
   MessageBox MB_YESNO $(_lang_runitnow) IDNO skip
   Exec "$INSTDIR\qomowin.exe"
+  skip:
+FunctionEnd
+
+;--------------------------------
+;Uninstaller Functions
+
+Function un.onInit
+  !insertmacro MUI_UNGETLANGUAGE
+FunctionEnd
+
+Function un.onUninstSuccess
+  MessageBox MB_YESNO $(_lang_remove_boot_item) IDNO skip
+  ${If} ${AtLeastWin2000}
+  ${AndIf} ${AtMostWin2003}
+    DetailPrint $(_lang_removing_boot_item)
+    MessageBox MB_OK "ntldr"
+  ${EndIf}
+
+  ${If} ${AtLeastWinVISTA}
+    DetailPrint $(_lang_removing_boot_item)
+    MessageBox MB_OK "mgr"
+  ${EndIf}
   skip:
 FunctionEnd
 
