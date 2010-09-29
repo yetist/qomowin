@@ -298,7 +298,7 @@ static void OnConfirm(HWND hwnd)
 		MessageBox(hwnd, "select usb disk installer", "This program is", MB_OK | MB_ICONINFORMATION);
 	}
 
-//	InstallMbr(hwnd);
+	InstallMbr(hwnd);
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)

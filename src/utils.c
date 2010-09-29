@@ -321,7 +321,7 @@ static BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver)
 	char *p, srcFileName[MAX_PATH], dstFileName[MAX_PATH];
 	DWORD dwAttrs;
 
-	if (!GetExeDir(srcFileName))
+	if (!getExeDir(srcFileName))
 	{
 		return FALSE;
 	}

@@ -13,7 +13,7 @@ EMAIL = yetist@gmail.com
 all: setup
 
 setup: qomowin-pre-setup
-	sed -i 's/@PACKAGE@/$(PACKAGE)/; s/@VERSION@/$(VERSION)/'       dist/qomowin-setup.nsi
+	sed -i 's/@PACKAGE@/$(PACKAGE)/; s/@VERSION@/$(VERSION)/; s/@WINVERSION@/$(WINVERSION1)/'       dist/qomowin-setup.nsi
 	tools/makensis dist/qomowin-setup.nsi
 	mv dist/$(PACKAGE)-$(VERSION).exe .
 
@@ -24,7 +24,7 @@ qomowin-pre-setup: check_wine qomowin winboot2 grublocale
 	rm -rf dist; mkdir -p dist/{locale,bin}
 	cp -f wine/drive_c/Program\ Files/7-Zip/7z.{exe,dll} dist/bin
 	cp build/src/locale/*dll dist/locale
-	cp -rf build/src/*.exe build/winboot nsis/* dist
+	cp -rf build/data/qomo-logo.ico build/src/*.exe build/winboot nsis/* dist
 	rm -rf build/{winboot,src,data}
 
 grublocale:
