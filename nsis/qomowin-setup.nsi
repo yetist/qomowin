@@ -180,7 +180,13 @@ Function un.onUninstSuccess
   ${If} ${AtLeastWin2000}
   ${AndIf} ${AtMostWin2003}
     DetailPrint $(_lang_removing_boot_item)
+#System::Call 'kernel32::GetModuleFileNameA(i 0, t .R0, i 1024) i r1'
+	System::Call 'kernel32::GetPrivateProfileSectionA(t "operating systems", t .R0, i 1024, t "C:\boot.ini") i r1'
+#readCount= GetPrivateProfileSection("operating systems", keys, BUFSIZ, bootIni);
+	 ;$R0 will contain the installer filename
+	 ;
     MessageBox MB_OK "ntldr"
+    MessageBox MB_OK $R0
   ${EndIf}
 
   ${If} ${AtLeastWinVISTA}

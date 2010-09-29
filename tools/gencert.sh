@@ -74,4 +74,4 @@ pfx2pvk yetist.pfx yetist.pvk abc123
 echo "call pfx2spc"
 pfx2spc yetist.pfx yetist.spc abc123
 
-# ./osslsigncode -spc yetist.spc -key yetist.der -n "ssss" -in qomowin.exe -out yetist.exe
+#./osslsigncode -spc yetist.spc -key yetist.der -n "ssss" -in qomowin.exe -out yetist.exe
