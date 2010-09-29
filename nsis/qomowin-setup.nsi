@@ -185,7 +185,7 @@ Function un.onUninstSuccess
 
   ${If} ${AtLeastWinVISTA}
     DetailPrint $(_lang_removing_boot_item)
-    MessageBox MB_OK "mgr"
+    MessageBox MB_OK "bootmgr"
   ${EndIf}
   skip:
 FunctionEnd

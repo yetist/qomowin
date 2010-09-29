@@ -277,7 +277,7 @@ static void InstallMbr(HWND hwnd)
 		CheckNtLdr(hwnd);
 	}
 	else if (versionInfo.dwMajorVersion == 6) /* Support Vista, Win7 */
-		MessageBox(hwnd, "bootMgr", "OS", MB_OK|MB_ICONWARNING);
+		MessageBox(hwnd, "bootmgr", "OS", MB_OK|MB_ICONWARNING);
 }
 
 static void OnConfirm(HWND hwnd)
