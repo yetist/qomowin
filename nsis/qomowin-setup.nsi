@@ -187,28 +187,39 @@ Function un.onUninstSuccess
   ${If} ${AtLeastWinVISTA}
     MessageBox MB_OK "bootmgr"
   ${EndIf}
-  DetailPrint $(_lang_removing_boot_item)
   skip:
 FunctionEnd
 
-Function un.delNtldr #delete boot.ini entry of qomoldr.mbr
-    EnumINI::Section "c:\boot.ini" "operating systems"
+Function un.delNtldr #delete boot.ini entry of qomowin on 2000,xp,2003
+    StrCpy $R9 $SYSDIR 3
+    StrCpy $R8 "$R9boot.ini"
+    EnumINI::Section "$R8" "operating systems"
     Pop $R0
     StrCmp $R0 "error" done
     loop:
         IntCmp $R0 "0" done done 0
         Pop $R1
 	StrCpy $R2 $R1 "" 3
-	StrCmp $R2 "qomoldr.mbr" 0 +2
+	StrCmp $R2 "qomoldr.mbr" 0 remove
 	Goto remove
         IntOp $R0 $R0 - 1
         Goto loop
     done:
         Return
     remove:
-        ${GetFileAttributes} "c:\boot.ini" "READONLY" $R0
+        ${GetFileAttributes} "$R8" "READONLY" $R0
 	StrCmp $R0 "1" 0 +2
-	SetFileAttributes "c:\boot.ini" "NORMAL"
-	DeleteINIStr "C:\boot.ini" "operating systems" "$R1"
-	SetFileAttributes "c:\boot.ini" "READONLY|HIDDEN|ARCHIVE"
+	SetFileAttributes "$R8" "NORMAL"
+	DeleteINIStr "$R8" "operating systems" "$R1"
+	SetFileAttributes "$R8" "READONLY|HIDDEN"
+
+	;delete X:\qomoldr
+	StrCpy $R8 "$R9qomoldr"
+	SetFileAttributes "$R8" "NORMAL"
+	Delete "$R8"
+
+	;delete X:\qomoldr.mbr
+	StrCpy $R8 "$R9qomoldr.mbr"
+	SetFileAttributes "$R8" "NORMAL"
+	Delete "$R8"
 FunctionEnd
