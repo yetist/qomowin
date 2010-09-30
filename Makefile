@@ -17,23 +17,17 @@ setup: qomowin-pre-setup
 	iconv -f utf-8 -t gb18030 nsis/mylang.nsh -o dist/mylang.nsh
 	sed -i 's/@PACKAGE@/$(PACKAGE)/; s/@VERSION@/$(VERSION)/; s/@WINVERSION@/$(WINVERSION1)/'       dist/qomowin-setup.nsi
 	tools/makensis dist/qomowin-setup.nsi
-	dist/osslsigncode -spc dist/yetist.spc -key dist/yetist.der -n "ssss" -in dist/$(PACKAGE)-$(VERSION).exe -out $(PACKAGE)-$(VERSION).exe
+	tools/osslsigncode -spc dist/yetist.spc -key dist/yetist.der -n "ssss" -in dist/$(PACKAGE)-$(VERSION).exe -out $(PACKAGE)-$(VERSION).exe
 
 wubizip: qomowin-pre-setup
 	cd nsis; zip -r wubi.zip wubi
 
-#makecert: qomowin-pre-setup
-#	cd dist; ../tools/gencert.sh
-#	tools/signtool signwizard
-#	./osslsigncode -spc yetist.spc -key yetist.der -n "ssss" -in qomowin.exe -out yetist.exe
-
-qomowin-pre-setup: check_wine qomowin winboot2 grublocale osslsigncode
+qomowin-pre-setup: check_wine qomowin winboot2 grublocale
 	rm -rf dist
 	mkdir -p dist/{locale,bin}
-	cp -f build/osslsigncode-1.3.1/osslsigncode dist
 	cd dist; ../tools/gencert.sh
-	dist/osslsigncode -spc dist/yetist.spc -key dist/yetist.der -n "ssss" -in build/src/qomowin.exe -out dist/qomowin.exe
-	dist/osslsigncode -spc dist/yetist.spc -key dist/yetist.der -n "ssss" -in build/src/locale/zh_CN.dll -out dist/locale/zh_CN.dll
+	tools/osslsigncode -spc dist/yetist.spc -key dist/yetist.der -n "ssss" -in build/src/qomowin.exe -out dist/qomowin.exe
+	tools/osslsigncode -spc dist/yetist.spc -key dist/yetist.der -n "ssss" -in build/src/locale/zh_CN.dll -out dist/locale/zh_CN.dll
 	cp -f wine/drive_c/Program\ Files/7-Zip/7z.{exe,dll} dist/bin
 	cp -rf build/data/qomo-logo.ico build/winboot nsis/* dist
 	rm -rf build/{winboot,src,data}
@@ -59,24 +53,15 @@ qomowin:
 	make -C build/data
 	make -C build/src
 
-winboot2: grubutil
+winboot2:
 	mkdir -p build/winboot
 	cp -f data/qomoldr.cfg data/qomoldr-bootstrap.cfg build/winboot/
-	./build/grubutil/grubinst/grubinst --grub2 --boot-file=qomoldr -o build/winboot/qomoldr.mbr
+	tools/grubinst --grub2 --boot-file=qomoldr -o build/winboot/qomoldr.mbr
 	cd build/winboot && tar cf qomoldr.tar qomoldr.cfg
 	grub-mkimage -c build/winboot/qomoldr-bootstrap.cfg -m build/winboot/qomoldr.tar -o build/grubutil/core.img \
 		loadenv biosdisk part_msdos part_gpt fat ntfs ext2 ntfscomp iso9660 loopback search linux boot minicmd cat cpuid chain halt help ls reboot \
 		echo test configfile normal sleep memdisk tar sh
 	cat /usr/lib/grub/i386-pc/lnxboot.img build/grubutil/core.img > build/winboot/qomoldr
-
-grubutil:
-	[ -d build/grubutil ] || svn export svn://svn.gna.org/svn/grubutil/trunk build/grubutil
-	cd build/grubutil/grubinst; make
-
-osslsigncode:
-	[ -d build/osslsigncode-1.3.1 ] || wget -O - http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/1.3.1/osslsigncode-1.3.1.tar.gz|tar -C build/ -xf -
-	cd build/osslsigncode-1.3.1; ./configure && make
-	#cp -f build/osslsigncode-1.3.1/osslsigncode dist
 
 check_wine: tools/check_wine
 	tools/check_wine

@@ -2,6 +2,7 @@
 ;Include
   !include "MUI2.nsh"
   !include "WinVer.nsh"
+  !include "FileFunc.nsh"
 
 ;--------------------------------
 ;Define
@@ -160,7 +161,8 @@ Section "Uninstall"
 SectionEnd
 
 ;--------------------------------
-;installer Functions
+; Functions
+;
 
 Function .onInstSuccess
   MessageBox MB_YESNO $(_lang_runitnow) IDNO skip
@@ -179,20 +181,34 @@ Function un.onUninstSuccess
   MessageBox MB_YESNO $(_lang_remove_boot_item) IDNO skip
   ${If} ${AtLeastWin2000}
   ${AndIf} ${AtMostWin2003}
-    DetailPrint $(_lang_removing_boot_item)
-#System::Call 'kernel32::GetModuleFileNameA(i 0, t .R0, i 1024) i r1'
-	System::Call 'kernel32::GetPrivateProfileSectionA(t "operating systems", t .R0, i 1024, t "C:\boot.ini") i r1'
-#readCount= GetPrivateProfileSection("operating systems", keys, BUFSIZ, bootIni);
-	 ;$R0 will contain the installer filename
-	 ;
-    MessageBox MB_OK "ntldr"
-    MessageBox MB_OK $R0
+  	Call un.delNtldr
   ${EndIf}
 
   ${If} ${AtLeastWinVISTA}
-    DetailPrint $(_lang_removing_boot_item)
     MessageBox MB_OK "bootmgr"
   ${EndIf}
+  DetailPrint $(_lang_removing_boot_item)
   skip:
 FunctionEnd
 
+Function un.delNtldr #delete boot.ini entry of qomoldr.mbr
+    EnumINI::Section "c:\boot.ini" "operating systems"
+    Pop $R0
+    StrCmp $R0 "error" done
+    loop:
+        IntCmp $R0 "0" done done 0
+        Pop $R1
+	StrCpy $R2 $R1 "" 3
+	StrCmp $R2 "qomoldr.mbr" 0 +2
+	Goto remove
+        IntOp $R0 $R0 - 1
+        Goto loop
+    done:
+        Return
+    remove:
+        ${GetFileAttributes} "c:\boot.ini" "READONLY" $R0
+	StrCmp $R0 "1" 0 +2
+	SetFileAttributes "c:\boot.ini" "NORMAL"
+	DeleteINIStr "C:\boot.ini" "operating systems" "$R1"
+	SetFileAttributes "c:\boot.ini" "READONLY|HIDDEN|ARCHIVE"
+FunctionEnd

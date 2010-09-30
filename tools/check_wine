@@ -11,30 +11,22 @@ mfc42_url="http://download.microsoft.com/download/vc60pro/update/1/w9xnt4/en-us/
 mfc42_md5="dd50945bcf3e09e22453be43684f3d39"
 
 enumini_url="http://nsis.sourceforge.net/mediawiki/images/6/62/EnumINI.zip"
+enumini_md5="e1c7babca1d6d86f628fdaa8b7546408"
+
+osslsigncode_url="http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/1.3.1/osslsigncode-1.3.1.tar.gz"
+osslsigncode_md5="1f2b818012a3e73ec6dac22ec09c8cf3"
 
 root="$(cd ${0%/*}/../;pwd)"
 export WINEPREFIX="$root"/wine
 
 download(){
-	wget  -P /tmp -O "$2" "$1"
+	wget -q -P /tmp -O "$2" "$1"
 	md5=$(md5sum $2)
 	md5=${md5%% *}
 	if [ ! "$md5" = "$3" ]; then
 		echo "Invalid download for $1, md5 does not match"
 		exit 1
 	fi
-}
-
-install_nsis(){
-	echo "Installing nsis..."
-	download "$nsis_url" "/tmp/nsis.exe" "$nsis_md5"
-	wine "/tmp/nsis.exe"
-}
-
-install_7z(){
-	echo "Installing 7z..."
-	download "$p7zip_url" "/tmp/p7zip.exe" "$p7zip_md5"
-	wine "/tmp/p7zip.exe"
 }
 
 install_wine(){
@@ -44,6 +36,26 @@ install_wine(){
 	fi
 	#echo "Creating wine folder..."
 	#wineprefixcreate --prefix "$WINEPREFIX"
+}
+
+install_7z(){
+	echo "Installing 7z..."
+	download "$p7zip_url" "/tmp/p7zip.exe" "$p7zip_md5"
+	wine "/tmp/p7zip.exe"
+}
+
+install_nsis(){
+	echo "Installing nsis..."
+	download "$nsis_url" "/tmp/nsis.exe" "$nsis_md5"
+	wine "/tmp/nsis.exe"
+}
+
+install_enumini(){
+	echo "Installing EnumINI..."
+	download "$enumini_url" "/tmp/enumini.zip" "$enumini_md5"
+
+	nsis_dir=`find $WINEPREFIX/drive_c/ -type d -name NSIS | head -n1`
+	unzip -o /tmp/enumini.zip -d "$nsis_dir"
 }
 
 install_zip(){
@@ -97,18 +109,44 @@ EOF
 	rm -rf '$WINEPREFIX/dosdevices/c:/winetrickstmp/*'
 }
 
+install_osslsigncode(){
+	if [ ! -e "$root/tools/osslsigncode" ]; then
+		download "$osslsigncode_url" "/tmp/osslsigncode.tar.gz" "$osslsigncode_md5"
+		tmpdir=`mktemp -d`
+		tar -xf /tmp/osslsigncode.tar.gz -C $tmpdir
+		cd $tmpdir/osslsigncode*
+		./configure
+		make
+		cp -f osslsigncode $root/tools
+		rm -rf $tmpdir
+	fi
+}
+
+install_grubutil(){
+	if [ ! -e "$root/tools/grubinst" ]; then
+		tmpdir=`mktemp -d`
+		svn export svn://svn.gna.org/svn/grubutil/trunk $tmpdir
+		cd $tmpdir/grubinst
+		make
+		cp -f grubinst $root/tools
+		rm -rf $tmpdir
+	fi
+}
+
 make_wine(){
 	install_wine
-	install_nsis
-	install_png2ico
 	install_zip
+	install_unzip
+	install_png2ico
+	install_nsis
+	install_enumini
 	install_7z
-	install_cabextract
-	install_cert
+	install_osslsigncode
+	install_grubutil
+	#install_cabextract
+	#install_cert
 }
 
 if [ ! -e "$root/wine" ]; then
 	make_wine
 fi
-	#install_cabextract
-	#install_cert
