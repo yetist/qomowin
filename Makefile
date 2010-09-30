@@ -64,9 +64,14 @@ winboot2: grubutil
 		echo test configfile normal sleep memdisk tar sh
 	cat /usr/lib/grub/i386-pc/lnxboot.img build/grubutil/core.img > build/winboot/qomoldr
 
-grubutil: 
+grubutil:
 	[ -d build/grubutil ] || svn export svn://svn.gna.org/svn/grubutil/trunk build/grubutil
 	cd build/grubutil/grubinst; make
+
+osslsigncode:
+	[ -d build/osslsigncode-1.3.1 ] || wget -O - http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/1.3.1/osslsigncode-1.3.1.tar.gz|tar -C build/ -xf -
+	cd build/osslsigncode-1.3.1; ./configure && make
+	#cp -f build/osslsigncode-1.3.1/osslsigncode tools
 
 check_wine: tools/check_wine
 	tools/check_wine

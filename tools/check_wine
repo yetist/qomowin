@@ -7,6 +7,9 @@ nsis_md5="5e02441c7f3fa4da4f4928a2d42a07c3"
 p7zip_url="http://heanet.dl.sourceforge.net/sourceforge/sevenzip/7z464.exe"
 p7zip_md5="d2810e3dd4b60ab05fe7c29a50921efa"
 
+mfc42_url="http://download.microsoft.com/download/vc60pro/update/1/w9xnt4/en-us/vc6redistsetup_enu.exe"
+mfc42_md5="dd50945bcf3e09e22453be43684f3d39"
+
 root="$(cd ${0%/*}/../;pwd)"
 export WINEPREFIX="$root"/wine
 
@@ -62,14 +65,48 @@ install_png2ico(){
 	fi
 }
 
+install_cabextract(){
+	if [ ! -x /usr/bin/cabextract -a ! -x /usr/local/bin/cabextract ]; then
+		echo "Installing cabextract..."
+		sudo pacman -S --noconfirm cabextract #TBD do not assume apt
+	fi
+}
+
+install_cert(){
+	echo "Installing mfc42..."
+	download "$mfc42_url" "/tmp/vc6redistsetup_enu.exe" "$mfc42_md5"
+	wine "/tmp/vc6redistsetup_enu.exe" '/T:C:\winetrickstmp' /c
+	mv $WINEPREFIX/dosdevices/c:/winetrickstmp/vcredist.exe /tmp
+	rm -f $WINEPREFIX/dosdevices/c:/windows/system32/comcat.dll
+	rm -f $WINEPREFIX/dosdevices/c:/windows/system32/msvcrt.dll
+	rm -f $WINEPREFIX/dosdevices/c:/windows/system32/oleaut32.dll
+	rm -f $WINEPREFIX/dosdevices/c:/windows/system32/olepro32.dll
+	rm -f $WINEPREFIX/dosdevices/c:/windows/system32/stdole2.tlb
+	wine /tmp/vcredist.exe
+	/usr/bin/cabextract /tmp/vcredist.exe -d $WINEPREFIX/dosdevices/c:/windows/system32/ -F mfc42u.dll
+	cat > /tmp/override-dll.reg <<EOF
+REGEDIT4
+
+[HKEY_CURRENT_USER\Software\Wine\DllOverrides]
+"*msvcrt"="native,builtin"
+EOF
+	wine regedit "/tmp/override-dll.reg"
+	rm /tmp/override-dll.reg
+	rm -rf '$WINEPREFIX/dosdevices/c:/winetrickstmp/*'
+}
+
 make_wine(){
 	install_wine
 	install_nsis
 	install_png2ico
 	install_zip
 	install_7z
+	install_cabextract
+	install_cert
 }
 
 if [ ! -e "$root/wine" ]; then
 	make_wine
 fi
+	#install_cabextract
+	#install_cert
