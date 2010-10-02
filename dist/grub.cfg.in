@@ -1,3 +1,4 @@
+
 # Timeout for menu
 set default=0
 set timeout=5
@@ -7,15 +8,6 @@ set timeout=5
 set menu_color_normal=light-blue/black
 set menu_color_highlight=light-cyan/blue
 
-#==QOMOWINBEGIN==#
-set title=Qomo
-set kernel=vmlinux
-set initrd=initrd0
-set iso_path=/boot/abc.iso
-set iso_dev=/dev/sdb2
-set rootflags=ro
-set grublang=zh_CN
-#==QOMOWINEND==#
 #set root
 search -s -f /Program\ Files/qomowin/qomowin.exe
 set prefix=(${root})/Program\ Files/qomowin/boot/grub

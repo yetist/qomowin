@@ -16,6 +16,8 @@ setup: qomowin-pre-setup
 	iconv -f utf-8 -t gb18030 nsis/qomowin-setup.nsi -o dist/qomowin-setup.nsi
 	iconv -f utf-8 -t gb18030 nsis/mylang.nsh -o dist/mylang.nsh
 	sed -i 's/@PACKAGE@/$(PACKAGE)/; s/@VERSION@/$(VERSION)/; s/@WINVERSION@/$(WINVERSION1)/'       dist/qomowin-setup.nsi
+	cp data/qomowin.ini dist
+	cp data/grub.cfg.in dist
 	tools/makensis dist/qomowin-setup.nsi
 	tools/osslsigncode -spc dist/yetist.spc -key dist/yetist.der -n "ssss" -in dist/$(PACKAGE)-$(VERSION).exe -out $(PACKAGE)-$(VERSION).exe
 

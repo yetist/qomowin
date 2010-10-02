@@ -67,6 +67,7 @@ BEGIN
     IDS_APP_USB_INST	"Make Bootable Device(Mobile)."
     IDS_APP_ISO_FILE	"&ISO Path:"
     IDS_APP_BROWSER	"&Browser"
+    IDS_APP_HOMEPAGE	"Homepage:"
     IDS_APP_CONFIRM	"&Confirm"
     IDS_APP_QUIT	"&Quit"
     IDS_OFN_TITLE	"Please select the Qomo ISO file..."

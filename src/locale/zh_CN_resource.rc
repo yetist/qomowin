@@ -52,6 +52,7 @@ BEGIN
     IDS_APP_USB_INST	"制作可启动移动设备（U盘）"
     IDS_APP_ISO_FILE	"ISO 文件(&I)"
     IDS_APP_BROWSER	"浏览(&B)"
+    IDS_APP_HOMEPAGE	"主页："
     IDS_APP_CONFIRM	"确认(&C)"
     IDS_APP_QUIT	"退出(&Q)"
     IDS_OFN_TITLE	"请选择Qomo ISO文件..."

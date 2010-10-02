@@ -20,6 +20,8 @@
  * */
 
 #include <shlwapi.h>
+#include <winioctl.h>
+
 #include "qomowin.h"
 #include "resource.h"
 #include "utils.h"
@@ -190,7 +192,7 @@ const char *winpidgin_get_locale(void)
 
 HMODULE	LoadLangDll(const char* locale)
 {
-	char 		DllPath[MAX_PATH];
+	char 		DllPath[MAX_PATH] = {0};
 	HMODULE		hDLL;
 
 	if( GetCurrentDirectory(MAX_PATH, DllPath))
@@ -261,8 +263,8 @@ int Boot(int reboot)
 void PrintError(HWND hwnd, TCHAR* msg)
 {
   DWORD eNum;
-  TCHAR sysMsg[BUFSIZ];
-  TCHAR showmsg[BUFSIZ];
+  TCHAR sysMsg[BUFSIZ] = {0};
+  TCHAR showmsg[BUFSIZ] = {0};
   TCHAR* p;
   TCHAR szTitle[BUFSIZ];
 
@@ -297,7 +299,7 @@ void PrintError(HWND hwnd, TCHAR* msg)
  * */
 BOOL getExeDir(char* path)
 {
-	char *p, modFileName[MAX_PATH];
+	char *p, modFileName[MAX_PATH] = {0};
 
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 	if (hInstance == NULL)
@@ -318,7 +320,7 @@ BOOL getExeDir(char* path)
 static BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver)
 {
 	/* sysDriver = "X:\" */
-	char *p, srcFileName[MAX_PATH], dstFileName[MAX_PATH];
+	char srcFileName[MAX_PATH] = {0}, dstFileName[MAX_PATH] = {0};
 	DWORD dwAttrs;
 
 	if (!getExeDir(srcFileName))
@@ -364,8 +366,9 @@ static BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver)
 
 BOOL ExtractISO(HWND hwnd)
 {
-	char szFile[MAX_PATH];
-	char cwd[MAX_PATH];
+	char szFile[MAX_PATH] = {0};
+	char cwd[MAX_PATH] = {0};
+	char cmd[MAX_PATH] = {0};
 
 	/* 7z 提取命令：
 	 * 7z e -o/tmp/ ~/Qomo1.iso isolinux/initrd0.img
@@ -374,18 +377,48 @@ BOOL ExtractISO(HWND hwnd)
 
 	if (getExeDir(cwd))
 	{
-		strcat(cwd, "\\boot");
+		char arg[MAX_PATH] = {0};
+		snprintf(arg, MAX_PATH, "%s\\bin\\7z.exe", cwd);
+
+		snprintf(cmd, MAX_PATH, "cmd /c %s e -o", arg);
+
+		snprintf(arg, MAX_PATH, "%s\\boot ", cwd);
+
+		strcat(cmd, arg);				//cmd="command.com /c .\bin\7z.exe e -o boot"
+
 		SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
-	}
-	else
-	{
+		strcat(cmd, szFile);  //cmd="command.com /c .\bin\7z.exe e -o boot ~/Qomo.iso"
+
+		snprintf(arg, MAX_PATH, "%s\\qomowin.ini", cwd);
+		GetPrivateProfileString("iso9660", "kernel", "isolinux/vmlinuz0", szFile, MAX_PATH, arg);
+
+		strcat(cmd, " -y ");  //cmd="command.com /c .\bin\7z.exe e -o boot ~/Qomo.iso "
+		strcpy(cwd, cmd); //save cmd line into cwd;
+		strcat(cmd, szFile);  //cmd="command.com /c .\bin\7z.exe e -o boot ~/Qomo.iso isolinux/initrd0.img"
+		if (WinExec(cmd, SW_HIDE) < 32)
+		{
+			PrintError(hwnd, "extract kernel from iso failed.");
+			return FALSE;
+		}
+
+		GetPrivateProfileString("iso9660", "initrd", "isolinux/initrd0", szFile, MAX_PATH, arg);
+
+		strcpy(cmd, cwd); //restore cmd line from cwd.
+		strcat(cmd, szFile);  //cmd="command.com /c .\bin\7z.exe e -o boot ~/Qomo.iso isolinux/initrd0.img"
+		if (WinExec(cmd, SW_HIDE) < 32)
+		{
+			PrintError(hwnd, "extract initrd from iso failed.");
+			return FALSE;
+		}
+		return TRUE;
+	} else {
 		return FALSE;
 	}
 }
 
 BOOL CheckNtLdr(HWND hwnd)
 {
-	char bootIni[BUFSIZ], *p;
+	char bootIni[BUFSIZ] = {0}, *p;
 	int isInstalled = 0;
 
 	/* 得到系统盘根目录的 X:/boot.ini 文件 */
@@ -401,7 +434,7 @@ BOOL CheckNtLdr(HWND hwnd)
 	if (PathFileExists(bootIni))  /* 检查 X:/boot.ini 文件 */
 	{
 		unsigned int readCount;
-		char  keys[BUFSIZ];
+		char  keys[BUFSIZ] = {0};
 		char *p;
 
 		readCount= GetPrivateProfileSection("operating systems", keys, BUFSIZ, bootIni);
@@ -419,7 +452,7 @@ BOOL CheckNtLdr(HWND hwnd)
 
 		if (!isInstalled) /* 在 X:/boot.ini 文件中未发现qomoldr.mbr引导项 */
 		{
-			char key[20];
+			char key[20] = {0};
 			DWORD dwAttrs;
 			memset(key, '\0', sizeof(key));
 			strncpy(key, bootIni, 3);		/* 这里key="X:\" */
@@ -457,6 +490,144 @@ BOOL CheckNtLdr(HWND hwnd)
 		MessageBox(hwnd, "Your OS looks like has some errors, lost the boot.ini file.", "qomoldr.mbr", MB_OK|MB_ICONWARNING);
 		return FALSE;
 	}
+}
+
+//   Driver   -   盘符，比如   'C '
+//   nDisk     -   返回哪个硬盘，序号从1开始
+//   nPart     -   返回哪个分区，序号从1开始
+BOOL   GetDriveInfo(const char* Driver, int* nDisk, int* nPart)
+{
+	BOOL   bRet;
+	char   buf[33] = {0};
+	DWORD   dwSize;
+	DWORD   dwIOCode;
+	DWORD   dwReturn;
+	HANDLE   hDevice;
+	VOLUME_DISK_EXTENTS   DiskExts;
+	PARTITION_INFORMATION   ParInfo;
+
+	wsprintf(buf,   "\\\\.\\%s ",   Driver);
+	hDevice = CreateFile(buf,GENERIC_READ,
+			FILE_SHARE_WRITE, 0, OPEN_EXISTING,
+			0, NULL);
+	if (hDevice == INVALID_HANDLE_VALUE)
+		return FALSE;
+	dwIOCode = IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS;
+	bRet = DeviceIoControl(hDevice,dwIOCode,NULL,0,
+			&DiskExts,sizeof(DiskExts),&dwReturn,NULL);
+	if(!bRet || DiskExts.NumberOfDiskExtents==0)
+	{
+		CloseHandle(hDevice);
+		return FALSE;
+	}
+
+	*nDisk = DiskExts.Extents[0].DiskNumber + 1;
+	dwIOCode = IOCTL_DISK_GET_PARTITION_INFO;
+	bRet = DeviceIoControl(hDevice,dwIOCode,NULL,0,
+			&ParInfo,sizeof(ParInfo),&dwReturn,NULL);
+	if(bRet)
+		*nPart = ParInfo.PartitionNumber;
+	CloseHandle(hDevice);
+   return bRet;
+} 
+
+BOOL getIsoDev(HWND hwnd, char* isodev)
+{
+		char szFile[MAX_PATH] = {0};
+		int ndisk, npart;
+
+		SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
+		szFile[2] = '\0';
+		if (GetDriveInfo(szFile, &ndisk, &npart) == TRUE)
+		{
+			sprintf(szFile, "/dev/sd%c%d", 'a' + ndisk -1, npart);
+			strcpy(isodev, szFile);
+			return TRUE;
+		}
+		return FALSE;
+}
+
+BOOL getIsoPath(HWND hwnd, char* isopath)
+{
+		char szFile[MAX_PATH] = {0};
+		char *p, *p1;
+		SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
+		memmove(szFile, szFile + 2, strlen(szFile) - 2); /* 去掉开头的盘符"X:" */
+
+		/* 去掉末尾的文件名，只保留路径部分 */
+		p = strrchr(szFile, '\\');
+		*p = '\0';
+
+		/* 转换Windows路径为Unix路径 */
+		p = szFile;
+		p1 = isopath;
+
+		while(p && (*p))
+		{
+			if (*p == '\\')
+				*p = '/';
+			if (*p == ' ')
+				*p1++ = '\\';
+			*p1++ = *p++;
+		}
+		return TRUE;
+}
+
+BOOL UpdateGrubCfg(HWND hwnd)
+{
+	FILE *fp, *fp2;
+	char cwd[MAX_PATH] = {0};
+	char sztmp[MAX_PATH] = {0};
+	char arg[MAX_PATH] = {0};
+	char txt[BUFSIZ] = {0};
+	const char *locale = NULL;
+	LCID lcid;
+	size_t size;
+
+	if (!getExeDir(cwd))
+		return FALSE;
+	snprintf(sztmp, sizeof(sztmp), "%s\\qomowin.ini", cwd);
+	GetPrivateProfileString("default", "title", "Qomo Linux LiveCD Installer", arg, MAX_PATH, sztmp);
+	strcat(txt, "set title=\""); strcat(txt, arg); strcat(txt, "\"\n");
+
+	GetPrivateProfileString("default", "kernel", "/boot/vmlinuz0", arg, MAX_PATH, sztmp);
+	strcat(txt, "set kernel=\""); strcat(txt, arg); strcat(txt, "\"\n");
+
+	GetPrivateProfileString("default", "initrd", "/boot/initrd0", arg, MAX_PATH, sztmp);
+	strcat(txt, "set initrd=\""); strcat(txt, arg); strcat(txt, "\"\n");
+
+	GetPrivateProfileString("default", "rootflags", "liveimg nodmraid rdblacklist=b44 rdblacklist=b43 rdblacklist=ssb", arg, MAX_PATH, sztmp);
+	strcat(txt, "set rootflags=\""); strcat(txt, arg); strcat(txt, "\"\n");
+
+	if (getIsoDev(hwnd, arg) != TRUE)
+		return FALSE;
+	strcat(txt, "set iso_dev=\""); strcat(txt, arg); strcat(txt, "\"\n");
+	if (getIsoPath(hwnd, arg) != TRUE)
+		return FALSE;
+	strcat(txt, "set iso_path=\""); strcat(txt, arg); strcat(txt, "\"\n");
+
+	lcid = GetUserDefaultLCID();
+	locale = winpidgin_lcid_to_posix(lcid);
+	strcat(txt, "set grublang=\""); strcat(txt, locale); strcat(txt, "\"\n");
+
+	snprintf(sztmp, sizeof(sztmp), "%s\\boot\\grub\\grub.cfg", cwd); 
+	if ((fp = fopen(sztmp, "w+")) == NULL)
+	{
+		return FALSE;
+	}
+	fwrite(txt, strlen(txt), 1, fp);
+
+	snprintf(sztmp, sizeof(sztmp), "%s\\grub.cfg.in", cwd);
+	if ((fp2 = fopen(sztmp, "r")) == NULL)
+	{
+		return FALSE;
+	}
+
+	while((nread=fread(txt, sizeof(char), READ_BUFF,fp2)) > 0)
+		fwrite(txt, sizeof(char), nread,fp);
+	fclose(fp2);
+	fclose(fp);
+	return 0;
 }
 
 /*

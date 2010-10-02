@@ -146,7 +146,7 @@ static void CreateControls(HWND hwnd)
 
 	LoadString(hLangDll, IDS_APP_ISO_FILE, szText, MAX_LOADSTRING);
 	w = dwCharW * strlen(szText);
-	hCtrl = CreateWindow("STATIC", szText, WS_CHILD | WS_VISIBLE |SS_LEFT | WS_TABSTOP, 50, 187, w, 120, hwnd, (HMENU)IDC_STATIC, hInstance, NULL);                          
+	hCtrl = CreateWindow("STATIC", szText, WS_CHILD | WS_VISIBLE |SS_LEFT | WS_TABSTOP, 50, 187, w, 20, hwnd, (HMENU)IDC_STATIC, hInstance, NULL);                          
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	hCtrl = CreateWindow("EDIT",NULL,WS_CHILD|WS_VISIBLE|WS_BORDER|ES_AUTOVSCROLL|ES_LEFT|ES_AUTOHSCROLL | WS_TABSTOP, 122, 185, 270, 20, hwnd,(HMENU)IDC_FILE_PATH, hInstance, NULL);
@@ -155,6 +155,15 @@ static void CreateControls(HWND hwnd)
 	LoadString(hLangDll, IDS_APP_BROWSER, szText, MAX_LOADSTRING);
 	w = dwCharW * (strlen(szText) + 4);
 	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, 395,185, w, 26, hwnd, (HMENU)IDC_BROWSER, hInstance, NULL);
+	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
+
+	LoadString(hLangDll, IDS_APP_HOMEPAGE, szText, MAX_LOADSTRING);
+	w = dwCharW * strlen(szText);
+	hCtrl = CreateWindow("STATIC", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, 50, rect.bottom-33, w, 20, hwnd, (HMENU)IDC_STATIC, hInstance, NULL);   
+	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
+
+	sprintf(szText, " http://www.linux-ren.org");
+	hCtrl = CreateWindow("STATIC", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, 50 + w, rect.bottom-33, dwCharW * (strlen(szText) + 4), 20, hwnd, (HMENU)IDC_HOMEPAGE, hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	LoadString(hLangDll, IDS_APP_QUIT, szText, MAX_LOADSTRING);
@@ -216,6 +225,7 @@ static BOOL CheckISOFile(HWND hwnd)
 	if ((len = strlen(szFile)) < 6)
 	{
 		MessageBox(hwnd, szMsgNotIso, szMsgError, MB_OK|MB_ICONWARNING);
+		return FALSE;
 	}
 	else
 	{
@@ -223,6 +233,7 @@ static BOOL CheckISOFile(HWND hwnd)
 		if (strncmp(p, ".iso", 4) != 0 && strncmp(p, ".ISO", 4) != 0)
 		{
 			MessageBox(hwnd, szMsgNotIso, szMsgError, MB_OK|MB_ICONWARNING);
+			return FALSE;
 		}
 		else
 		{
@@ -234,7 +245,7 @@ static BOOL CheckISOFile(HWND hwnd)
 			}
 		}
 	}
-	return FALSE;
+	return TRUE;
 }
 
 static void InstallMbr(HWND hwnd)
@@ -282,12 +293,20 @@ static void InstallMbr(HWND hwnd)
 
 static void OnConfirm(HWND hwnd)
 {
-	CheckISOFile(hwnd);
-	ExtractISO(hwnd);
+	if (CheckISOFile(hwnd) != TRUE)
+	{
+		return;
+	}
 
 	if ( BST_CHECKED == SendMessage(GetDlgItem(hwnd, IDC_HD_INST), BM_GETCHECK, 0, 0))
 	{
 		MessageBox(hwnd, "select hdisk installer", "This program is", MB_OK | MB_ICONINFORMATION);
+		if (ExtractISO(hwnd) != TRUE)
+		{
+			MessageBox(hwnd, "F2", "FAIL", MB_OK | MB_ICONINFORMATION);
+			return;
+		}
+		UpdateGrubCfg(hwnd);
 	}
 	else if ( BST_CHECKED == SendMessage(GetDlgItem(hwnd, IDC_HD_UNINST), BM_GETCHECK, 0, 0))
 	{
@@ -297,7 +316,6 @@ static void OnConfirm(HWND hwnd)
 	{
 		MessageBox(hwnd, "select usb disk installer", "This program is", MB_OK | MB_ICONINFORMATION);
 	}
-
 	InstallMbr(hwnd);
 }
 
@@ -312,12 +330,6 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case WM_COMMAND:
 			switch (LOWORD(wParam))
 			{
-				/*
-				case IDC_HD_INST:
-				case IDC_HD_UNINST:
-				case IDC_USB_INST:
-					break;
-					*/
 				case IDC_CONFIRM:
 					OnConfirm(hwnd);
 					break;

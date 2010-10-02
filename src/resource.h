@@ -31,6 +31,7 @@
 #define IDC_USB_LIST			106
 #define IDC_CONFIRM             107
 #define IDC_QUIT                108
+#define IDC_HOMEPAGE            109
 
 #define IDI_APP_ICON			2001
 #define IDS_APP_FONT			2002
@@ -46,6 +47,7 @@
 #define IDS_APP_CONFIRM			3010
 #define IDS_APP_QUIT			3011
 #define IDS_OFN_TITLE			3012
+#define IDS_APP_HOMEPAGE		3013
 
 #define IDS_MSG_ERROR			4001
 #define IDS_MSG_WARNING			4002

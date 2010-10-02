@@ -32,6 +32,7 @@ int Boot(int reboot);
 void PrintError(HWND hwnd, TCHAR* msg);
 BOOL CheckNtLdr(HWND hwnd);
 BOOL ExtractISO(HWND hwnd);
+BOOL UpdateGrubCfg(HWND hwnd);
 
 #endif /* __UTILS_H__ */
 

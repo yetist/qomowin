@@ -27,7 +27,7 @@
   SetCompressor /SOLID lzma
   SetDatablockOptimize on
   SetDateSave on
-  BrandingText /TRIMCENTER "Powered by http://www.linux-ren.org "
+  BrandingText /TRIMCENTER "http://www.linux-ren.org"
 ;--------------------------------
 ;Variables
 
