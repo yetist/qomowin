@@ -28,6 +28,9 @@
 
 static char* winpidgin_lcid_to_posix(LCID lcid);
 static BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver);
+static BOOL getIsoPath(HWND hwnd, char* isopath);
+static BOOL getIsoDev(HWND hwnd, char* isodev);
+static BOOL   GetDriveInfo(const char* Driver, int* nDisk, int* nPart);
 
 static char* winpidgin_lcid_to_posix(LCID lcid) 
 {
@@ -368,7 +371,7 @@ BOOL ExtractISO(HWND hwnd)
 {
 	char szFile[MAX_PATH] = {0};
 	char cwd[MAX_PATH] = {0};
-	char cmd[MAX_PATH] = {0};
+	char cmd[BUFSIZ] = {0};
 
 	/* 7z 提取命令：
 	 * 7z e -o/tmp/ ~/Qomo1.iso isolinux/initrd0.img
@@ -380,21 +383,24 @@ BOOL ExtractISO(HWND hwnd)
 		char arg[MAX_PATH] = {0};
 		snprintf(arg, MAX_PATH, "%s\\bin\\7z.exe", cwd);
 
-		snprintf(cmd, MAX_PATH, "cmd /c %s e -o", arg);
+		snprintf(cmd, sizeof(cmd), "cmd /c %s e -y -o", arg);
 
-		snprintf(arg, MAX_PATH, "%s\\boot ", cwd);
+		snprintf(arg, sizeof(arg), "%s\\boot ", cwd);
 
 		strcat(cmd, arg);				//cmd="command.com /c .\bin\7z.exe e -o boot"
 
 		SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
+		strcat(cmd, "\"");
 		strcat(cmd, szFile);  //cmd="command.com /c .\bin\7z.exe e -o boot ~/Qomo.iso"
+		strcat(cmd, "\" ");
 
-		snprintf(arg, MAX_PATH, "%s\\qomowin.ini", cwd);
-		GetPrivateProfileString("iso9660", "kernel", "isolinux/vmlinuz0", szFile, MAX_PATH, arg);
+		snprintf(arg, sizeof(arg), "%s\\qomowin.ini", cwd);
 
-		strcat(cmd, " -y ");  //cmd="command.com /c .\bin\7z.exe e -o boot ~/Qomo.iso "
 		strcpy(cwd, cmd); //save cmd line into cwd;
+		GetPrivateProfileString("iso9660", "kernel", "isolinux/vmlinuz0", szFile, MAX_PATH, arg);
 		strcat(cmd, szFile);  //cmd="command.com /c .\bin\7z.exe e -o boot ~/Qomo.iso isolinux/initrd0.img"
+
+		MessageBox(hwnd, cmd, arg, MB_OK|MB_ICONWARNING);
 		if (WinExec(cmd, SW_HIDE) < 32)
 		{
 			PrintError(hwnd, "extract kernel from iso failed.");
@@ -405,6 +411,10 @@ BOOL ExtractISO(HWND hwnd)
 
 		strcpy(cmd, cwd); //restore cmd line from cwd.
 		strcat(cmd, szFile);  //cmd="command.com /c .\bin\7z.exe e -o boot ~/Qomo.iso isolinux/initrd0.img"
+
+		MessageBox(hwnd, cmd, szFile, MB_OK|MB_ICONWARNING);
+
+
 		if (WinExec(cmd, SW_HIDE) < 32)
 		{
 			PrintError(hwnd, "extract initrd from iso failed.");
@@ -495,11 +505,10 @@ BOOL CheckNtLdr(HWND hwnd)
 //   Driver   -   盘符，比如   'C '
 //   nDisk     -   返回哪个硬盘，序号从1开始
 //   nPart     -   返回哪个分区，序号从1开始
-BOOL   GetDriveInfo(const char* Driver, int* nDisk, int* nPart)
+static BOOL   GetDriveInfo(const char* Driver, int* nDisk, int* nPart)
 {
 	BOOL   bRet;
 	char   buf[33] = {0};
-	DWORD   dwSize;
 	DWORD   dwIOCode;
 	DWORD   dwReturn;
 	HANDLE   hDevice;
@@ -531,7 +540,7 @@ BOOL   GetDriveInfo(const char* Driver, int* nDisk, int* nPart)
    return bRet;
 } 
 
-BOOL getIsoDev(HWND hwnd, char* isodev)
+static BOOL getIsoDev(HWND hwnd, char* isodev)
 {
 		char szFile[MAX_PATH] = {0};
 		int ndisk, npart;
@@ -547,7 +556,7 @@ BOOL getIsoDev(HWND hwnd, char* isodev)
 		return FALSE;
 }
 
-BOOL getIsoPath(HWND hwnd, char* isopath)
+static BOOL getIsoPath(HWND hwnd, char* isopath)
 {
 		char szFile[MAX_PATH] = {0};
 		char *p, *p1;
@@ -582,7 +591,7 @@ BOOL UpdateGrubCfg(HWND hwnd)
 	char txt[BUFSIZ] = {0};
 	const char *locale = NULL;
 	LCID lcid;
-	size_t size;
+	size_t nread;
 
 	if (!getExeDir(cwd))
 		return FALSE;
@@ -602,6 +611,7 @@ BOOL UpdateGrubCfg(HWND hwnd)
 	if (getIsoDev(hwnd, arg) != TRUE)
 		return FALSE;
 	strcat(txt, "set iso_dev=\""); strcat(txt, arg); strcat(txt, "\"\n");
+	memset(arg, '\0', sizeof(arg));
 	if (getIsoPath(hwnd, arg) != TRUE)
 		return FALSE;
 	strcat(txt, "set iso_path=\""); strcat(txt, arg); strcat(txt, "\"\n");
@@ -623,11 +633,11 @@ BOOL UpdateGrubCfg(HWND hwnd)
 		return FALSE;
 	}
 
-	while((nread=fread(txt, sizeof(char), READ_BUFF,fp2)) > 0)
+	while((nread=fread(txt, sizeof(char), BUFSIZ, fp2)) > 0)
 		fwrite(txt, sizeof(char), nread,fp);
 	fclose(fp2);
 	fclose(fp);
-	return 0;
+	return TRUE;
 }
 
 /*

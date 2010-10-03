@@ -98,6 +98,8 @@ Section
 
   SetOutPath "$INSTDIR"
   File "qomowin.exe"
+  File "qomowin.ini"
+  File "grub.cfg.in"
   File /r bin boot locale
 
   ;Store installation folder

@@ -27,8 +27,8 @@ background_image (${root})/Program\ Files/qomowin/boot/grub/backgrounds/backgrou
 
 menuentry "${title}" {
 set root=(${root})
-linux /Program\ Files/qomowin/boot/${kernel} ro root=livedisk:${iso_dev} livedisk_iso=${iso_path} ${rootflags}
-initrd /Program\ Files/qomowin/boot/${initrd}
+linux /Program\ Files/qomowin/${kernel} ro root=livedisk:${iso_dev} livedisk_iso=${iso_path} ${rootflags}
+initrd /Program\ Files/qomowin/${initrd}
 }
 
 ## Custom entry add below this line

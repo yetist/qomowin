@@ -300,13 +300,16 @@ static void OnConfirm(HWND hwnd)
 
 	if ( BST_CHECKED == SendMessage(GetDlgItem(hwnd, IDC_HD_INST), BM_GETCHECK, 0, 0))
 	{
-		MessageBox(hwnd, "select hdisk installer", "This program is", MB_OK | MB_ICONINFORMATION);
 		if (ExtractISO(hwnd) != TRUE)
 		{
 			MessageBox(hwnd, "F2", "FAIL", MB_OK | MB_ICONINFORMATION);
 			return;
 		}
-		UpdateGrubCfg(hwnd);
+		if (UpdateGrubCfg(hwnd) != TRUE)
+		{
+			MessageBox(hwnd, "Update grub.cfg error", "error", MB_OK | MB_ICONINFORMATION);
+			return;
+		}
 	}
 	else if ( BST_CHECKED == SendMessage(GetDlgItem(hwnd, IDC_HD_UNINST), BM_GETCHECK, 0, 0))
 	{
@@ -317,6 +320,8 @@ static void OnConfirm(HWND hwnd)
 		MessageBox(hwnd, "select usb disk installer", "This program is", MB_OK | MB_ICONINFORMATION);
 	}
 	InstallMbr(hwnd);
+	if (MessageBox(hwnd, "Rebooting now?", "Reboot", MB_YESNO | MB_ICONINFORMATION) == IDYES)
+		Boot(1);
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
