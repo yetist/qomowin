@@ -125,7 +125,7 @@ install_osslsigncode(){
 install_grubutil(){
 	if [ ! -e "$root/tools/grubinst" ]; then
 		tmpdir=`mktemp -d`
-		svn export svn://svn.gna.org/svn/grubutil/trunk $tmpdir
+		svn export --force svn://svn.gna.org/svn/grubutil/trunk $tmpdir
 		cd $tmpdir/grubinst
 		make
 		cp -f grubinst $root/tools
