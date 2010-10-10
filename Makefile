@@ -57,13 +57,13 @@ qomowin:
 
 winboot2:
 	mkdir -p build/winboot
-	cp -f data/qomoldr.cfg data/qomoldr-bootstrap.cfg build/winboot/
+	cp -f data/qomoldr.cfg build/winboot/
 	tools/grubinst --grub2 --boot-file=qomoldr -o build/winboot/qomoldr.mbr
 	cd build/winboot && tar cf qomoldr.tar qomoldr.cfg
-	grub-mkimage -c build/winboot/qomoldr-bootstrap.cfg -m build/winboot/qomoldr.tar -o build/grubutil/core.img \
+	grub-mkimage -c data/qomoldr-bootstrap.cfg -m build/winboot/qomoldr.tar -o build/winboot/core.img \
 		loadenv biosdisk part_msdos part_gpt fat ntfs ext2 ntfscomp iso9660 loopback search linux boot minicmd cat cpuid chain halt help ls reboot \
 		echo test configfile normal sleep memdisk tar sh
-	cat /usr/lib/grub/i386-pc/lnxboot.img build/grubutil/core.img > build/winboot/qomoldr
+	cat /usr/lib/grub/i386-pc/lnxboot.img build/winboot/core.img > build/winboot/qomoldr
 
 check_wine: tools/check_wine
 	tools/check_wine

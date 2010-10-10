@@ -367,6 +367,40 @@ static BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver)
 	return TRUE;
 }
 
+BOOL ExecCmd(HWND hwnd, const char* app, const char* param)
+{
+	char cmdline[BUFSIZ];
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+	int ret;
+	DWORD exitcode;
+
+	ZeroMemory(&si,sizeof(si));
+	ZeroMemory(&pi,sizeof(pi));
+    si.cb = sizeof(STARTUPINFO);
+    //GetStartupInfo(&si);
+    si.wShowWindow = SW_SHOW;
+    si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
+	snprintf(cmdline, sizeof(cmdline), "%s %s ", app, param);
+
+    if (!CreateProcess(app, param, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) 
+	{
+		MessageBox(hwnd, cmdline, "here", MB_OK|MB_ICONWARNING);
+        return FALSE;
+    }
+
+	MessageBox(hwnd, "hhhh", "ooo", MB_OK|MB_ICONWARNING);
+	do
+	{
+		// 等待结束
+		WaitForSingleObject(pi.hProcess,0);
+		ret = GetExitCodeProcess (pi.hProcess, &exitcode);
+		MessageBox(hwnd, app, param, MB_OK|MB_ICONWARNING);
+	} while (ret && exitcode == STILL_ACTIVE);
+	TerminateProcess(pi.hProcess, 0);
+	return TRUE;
+}
+
 BOOL ExtractISO(HWND hwnd)
 {
 	char szFile[MAX_PATH] = {0};
@@ -381,18 +415,20 @@ BOOL ExtractISO(HWND hwnd)
 	if (getExeDir(cwd))
 	{
 		char arg[MAX_PATH] = {0};
-		snprintf(arg, MAX_PATH, "%s\\bin\\7z.exe", cwd);
+		char app[MAX_PATH] = {0};
 
-		snprintf(cmd, sizeof(cmd), "cmd /c %s e -y -o", arg);
+		snprintf(app, MAX_PATH, "%s\\bin\\7z.exe", cwd);
+
+		snprintf(cmd, sizeof(cmd), "e -y -o");
 
 		snprintf(arg, sizeof(arg), "%s\\boot ", cwd);
 
 		strcat(cmd, arg);				//cmd="command.com /c .\bin\7z.exe e -o boot"
 
 		SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
-		strcat(cmd, "\"");
+		//strcat(cmd, "\"");
 		strcat(cmd, szFile);  //cmd="command.com /c .\bin\7z.exe e -o boot ~/Qomo.iso"
-		strcat(cmd, "\" ");
+		strcat(cmd, " ");
 
 		snprintf(arg, sizeof(arg), "%s\\qomowin.ini", cwd);
 
@@ -400,10 +436,11 @@ BOOL ExtractISO(HWND hwnd)
 		GetPrivateProfileString("iso9660", "kernel", "isolinux/vmlinuz0", szFile, MAX_PATH, arg);
 		strcat(cmd, szFile);  //cmd="command.com /c .\bin\7z.exe e -o boot ~/Qomo.iso isolinux/initrd0.img"
 
-		MessageBox(hwnd, cmd, arg, MB_OK|MB_ICONWARNING);
-		if (WinExec(cmd, SW_HIDE) < 32)
+		MessageBox(hwnd, cmd, app, MB_OK|MB_ICONWARNING);
+		if (!ExecCmd(hwnd, app, cmd))
 		{
 			PrintError(hwnd, "extract kernel from iso failed.");
+			//if (PathFileExists(bootIni))
 			return FALSE;
 		}
 
@@ -412,10 +449,8 @@ BOOL ExtractISO(HWND hwnd)
 		strcpy(cmd, cwd); //restore cmd line from cwd.
 		strcat(cmd, szFile);  //cmd="command.com /c .\bin\7z.exe e -o boot ~/Qomo.iso isolinux/initrd0.img"
 
-		MessageBox(hwnd, cmd, szFile, MB_OK|MB_ICONWARNING);
-
-
-		if (WinExec(cmd, SW_HIDE) < 32)
+		MessageBox(hwnd, cmd, app, MB_OK|MB_ICONWARNING);
+		if (!ExecCmd(hwnd, app, cmd))
 		{
 			PrintError(hwnd, "extract initrd from iso failed.");
 			return FALSE;
@@ -502,7 +537,7 @@ BOOL CheckNtLdr(HWND hwnd)
 	}
 }
 
-//   Driver   -   盘符，比如   'C '
+//   Driver   -   盘符，比如'C '
 //   nDisk     -   返回哪个硬盘，序号从1开始
 //   nPart     -   返回哪个分区，序号从1开始
 static BOOL   GetDriveInfo(const char* Driver, int* nDisk, int* nPart)
@@ -542,44 +577,44 @@ static BOOL   GetDriveInfo(const char* Driver, int* nDisk, int* nPart)
 
 static BOOL getIsoDev(HWND hwnd, char* isodev)
 {
-		char szFile[MAX_PATH] = {0};
-		int ndisk, npart;
+	char szFile[MAX_PATH] = {0};
+	int ndisk, npart;
 
-		SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
-		szFile[2] = '\0';
-		if (GetDriveInfo(szFile, &ndisk, &npart) == TRUE)
-		{
-			sprintf(szFile, "/dev/sd%c%d", 'a' + ndisk -1, npart);
-			strcpy(isodev, szFile);
-			return TRUE;
-		}
-		return FALSE;
+	SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
+	szFile[2] = '\0';
+	if (GetDriveInfo(szFile, &ndisk, &npart) == TRUE)
+	{
+		sprintf(szFile, "/dev/sd%c%d", 'a' + ndisk -1, npart);
+		strcpy(isodev, szFile);
+		return TRUE;
+	}
+	return FALSE;
 }
 
 static BOOL getIsoPath(HWND hwnd, char* isopath)
 {
-		char szFile[MAX_PATH] = {0};
-		char *p, *p1;
-		SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
-		memmove(szFile, szFile + 2, strlen(szFile) - 2); /* 去掉开头的盘符"X:" */
+	char szFile[MAX_PATH] = {0};
+	char *p, *p1;
+	SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
+	memmove(szFile, szFile + 2, strlen(szFile) - 2); /* 去掉开头的盘符"X:" */
 
-		/* 去掉末尾的文件名，只保留路径部分 */
-		p = strrchr(szFile, '\\');
-		*p = '\0';
+	/* 去掉末尾的文件名，只保留路径部分 */
+	p = strrchr(szFile, '\\');
+	*p = '\0';
 
-		/* 转换Windows路径为Unix路径 */
-		p = szFile;
-		p1 = isopath;
+	/* 转换Windows路径为Unix路径 */
+	p = szFile;
+	p1 = isopath;
 
-		while(p && (*p))
-		{
-			if (*p == '\\')
-				*p = '/';
-			if (*p == ' ')
-				*p1++ = '\\';
-			*p1++ = *p++;
-		}
-		return TRUE;
+	while(p && (*p))
+	{
+		if (*p == '\\')
+			*p = '/';
+		if (*p == ' ')
+			*p1++ = '\\';
+		*p1++ = *p++;
+	}
+	return TRUE;
 }
 
 BOOL UpdateGrubCfg(HWND hwnd)
