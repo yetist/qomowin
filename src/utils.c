@@ -21,6 +21,7 @@
 
 #include <shlwapi.h>
 #include <winioctl.h>
+#include <unistd.h>
 
 #include "qomowin.h"
 #include "resource.h"
@@ -307,7 +308,7 @@ BOOL getExeDir(char* path)
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 	if (hInstance == NULL)
 		return FALSE;
-	if ( GetModuleFileName(hInstance, modFileName, MAX_PATH) != 0)
+	if (GetModuleFileName(hInstance, modFileName, MAX_PATH) != 0)
 	{
 		p = strrchr(modFileName, '\\');
 		*p = '\0';
@@ -367,9 +368,8 @@ static BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver)
 	return TRUE;
 }
 
-BOOL ExecCmd(HWND hwnd, const char* app, const char* param)
+BOOL ExecCmd(HWND hwnd, const char* cmd)
 {
-	char cmdline[BUFSIZ];
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
 	int ret;
@@ -378,24 +378,21 @@ BOOL ExecCmd(HWND hwnd, const char* app, const char* param)
 	ZeroMemory(&si,sizeof(si));
 	ZeroMemory(&pi,sizeof(pi));
     si.cb = sizeof(STARTUPINFO);
-    //GetStartupInfo(&si);
-    si.wShowWindow = SW_SHOW;
+    GetStartupInfo(&si);
+    si.wShowWindow = SW_HIDE;
     si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
-	snprintf(cmdline, sizeof(cmdline), "%s %s ", app, param);
 
-    if (!CreateProcess(app, param, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) 
+    if (!CreateProcess(NULL, (LPSTR)cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) 
 	{
-		MessageBox(hwnd, cmdline, "here", MB_OK|MB_ICONWARNING);
+		MessageBox(hwnd, cmd, "here", MB_OK|MB_ICONWARNING);
         return FALSE;
     }
 
-	MessageBox(hwnd, "hhhh", "ooo", MB_OK|MB_ICONWARNING);
 	do
 	{
 		// 等待结束
 		WaitForSingleObject(pi.hProcess,0);
 		ret = GetExitCodeProcess (pi.hProcess, &exitcode);
-		MessageBox(hwnd, app, param, MB_OK|MB_ICONWARNING);
 	} while (ret && exitcode == STILL_ACTIVE);
 	TerminateProcess(pi.hProcess, 0);
 	return TRUE;
@@ -415,42 +412,27 @@ BOOL ExtractISO(HWND hwnd)
 	if (getExeDir(cwd))
 	{
 		char arg[MAX_PATH] = {0};
-		char app[MAX_PATH] = {0};
-
-		snprintf(app, MAX_PATH, "%s\\bin\\7z.exe", cwd);
-
-		snprintf(cmd, sizeof(cmd), "e -y -o");
-
-		snprintf(arg, sizeof(arg), "%s\\boot ", cwd);
-
-		strcat(cmd, arg);				//cmd="command.com /c .\bin\7z.exe e -o boot"
 
 		SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
-		//strcat(cmd, "\"");
-		strcat(cmd, szFile);  //cmd="command.com /c .\bin\7z.exe e -o boot ~/Qomo.iso"
-		strcat(cmd, " ");
+
+		snprintf(cmd, sizeof(cmd), "%s\\bin\\7z.exe e -y \"-o%s\\boot\" \"%s\" ", cwd, cwd, szFile);
+		strcpy(cwd, cmd); //save cmd line into cwd;
 
 		snprintf(arg, sizeof(arg), "%s\\qomowin.ini", cwd);
-
-		strcpy(cwd, cmd); //save cmd line into cwd;
 		GetPrivateProfileString("iso9660", "kernel", "isolinux/vmlinuz0", szFile, MAX_PATH, arg);
 		strcat(cmd, szFile);  //cmd="command.com /c .\bin\7z.exe e -o boot ~/Qomo.iso isolinux/initrd0.img"
 
-		MessageBox(hwnd, cmd, app, MB_OK|MB_ICONWARNING);
-		if (!ExecCmd(hwnd, app, cmd))
+		if (!ExecCmd(hwnd, cmd))
 		{
 			PrintError(hwnd, "extract kernel from iso failed.");
-			//if (PathFileExists(bootIni))
 			return FALSE;
 		}
 
-		GetPrivateProfileString("iso9660", "initrd", "isolinux/initrd0", szFile, MAX_PATH, arg);
-
+		GetPrivateProfileString("iso9660", "initrd", "isolinux/initrd0.img", szFile, MAX_PATH, arg);
 		strcpy(cmd, cwd); //restore cmd line from cwd.
 		strcat(cmd, szFile);  //cmd="command.com /c .\bin\7z.exe e -o boot ~/Qomo.iso isolinux/initrd0.img"
 
-		MessageBox(hwnd, cmd, app, MB_OK|MB_ICONWARNING);
-		if (!ExecCmd(hwnd, app, cmd))
+		if (!ExecCmd(hwnd, cmd))
 		{
 			PrintError(hwnd, "extract initrd from iso failed.");
 			return FALSE;
