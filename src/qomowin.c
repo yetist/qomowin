@@ -289,13 +289,11 @@ static void InstallMbr(HWND hwnd)
 	 *  */
 	if (versionInfo.dwMajorVersion == 5) /* Support 2000, XP, 2003 */
 	{
-		MessageBox(hwnd, "NTLDR", "OS", MB_OK|MB_ICONWARNING);
 		CheckNtLdr(hwnd);
 	}
 	else if (versionInfo.dwMajorVersion == 6) /* Support Vista, Win7 */
 	{
 		CheckBootMgr(hwnd);
-		MessageBox(hwnd, "bootmgr", "OS", MB_OK|MB_ICONWARNING);
 	}
 }
 
@@ -318,6 +316,9 @@ static void OnConfirm(HWND hwnd)
 			MessageBox(hwnd, "Update grub.cfg error", "error", MB_OK | MB_ICONINFORMATION);
 			return;
 		}
+		InstallMbr(hwnd);
+		if (MessageBox(hwnd, "Rebooting now?", "Reboot", MB_YESNO | MB_ICONINFORMATION) == IDYES)
+			ReBoot(1);
 	}
 	else if ( BST_CHECKED == SendMessage(GetDlgItem(hwnd, IDC_HD_UNINST), BM_GETCHECK, 0, 0))
 	{
@@ -327,9 +328,6 @@ static void OnConfirm(HWND hwnd)
 	{
 		MessageBox(hwnd, "select usb disk installer", "This program is", MB_OK | MB_ICONINFORMATION);
 	}
-	InstallMbr(hwnd);
-	if (MessageBox(hwnd, "Rebooting now?", "Reboot", MB_YESNO | MB_ICONINFORMATION) == IDYES)
-		ReBoot(1);
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)

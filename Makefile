@@ -19,7 +19,8 @@ setup: qomowin-pre-setup
 	cp data/qomowin.ini dist
 	cp data/grub.cfg.in dist
 	tools/makensis dist/qomowin-setup.nsi
-	tools/osslsigncode -spc dist/yetist.spc -key dist/yetist.der -n "ssss" -in dist/$(PACKAGE)-$(VERSION).exe -out $(PACKAGE)-$(VERSION).exe
+	#tools/osslsigncode -spc dist/yetist.spc -key dist/yetist.der -n "ssss" -in dist/$(PACKAGE)-$(VERSION).exe -out $(PACKAGE)-$(VERSION).exe
+	cp -f dist/$(PACKAGE)-$(VERSION).exe $(PACKAGE)-$(VERSION).exe
 
 wubizip: qomowin-pre-setup
 	cd nsis; zip -r wubi.zip wubi
@@ -27,9 +28,11 @@ wubizip: qomowin-pre-setup
 qomowin-pre-setup: check_wine qomowin winboot2 grublocale
 	rm -rf dist
 	mkdir -p dist/{locale,bin}
-	cd dist; ../tools/gencert.sh
-	tools/osslsigncode -spc dist/yetist.spc -key dist/yetist.der -n "ssss" -in build/src/qomowin.exe -out dist/qomowin.exe
-	tools/osslsigncode -spc dist/yetist.spc -key dist/yetist.der -n "ssss" -in build/src/locale/zh_CN.dll -out dist/locale/zh_CN.dll
+	#cd dist; ../tools/gencert.sh
+	#tools/osslsigncode -spc dist/yetist.spc -key dist/yetist.der -n "ssss" -in build/src/qomowin.exe -out dist/qomowin.exe
+	#tools/osslsigncode -spc dist/yetist.spc -key dist/yetist.der -n "ssss" -in build/src/locale/zh_CN.dll -out dist/locale/zh_CN.dll
+	cp -f  build/src/qomowin.exe dist/qomowin.exe
+	cp -f build/src/locale/zh_CN.dll dist/locale/zh_CN.dll
 	cp -f wine/drive_c/Program\ Files/7-Zip/7z.{exe,dll} dist/bin
 	cp -rf build/data/qomo-logo.ico build/winboot nsis/* dist
 	rm -rf build/{winboot,src,data}

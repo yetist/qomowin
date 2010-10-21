@@ -32,7 +32,11 @@ static char* winpidgin_lcid_to_posix(LCID lcid);
 static BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver);
 static BOOL getIsoPath(HWND hwnd, char* isopath);
 static BOOL getIsoDev(HWND hwnd, char* isodev);
-static BOOL   GetDriveInfo(const char* Driver, int* nDisk, int* nPart);
+static BOOL GetDriveInfo(const char* Driver, int* nDisk, int* nPart);
+static BOOL ExecCmd(HWND hwnd, const char* cmd);
+static BOOL ExecCmdOut(HWND hwnd, const char* cmd, char* buf);
+static BOOL getRegKey(const char* key, char* value, size_t size);
+static BOOL writeRegKey(HWND hwnd, const char* key, const char* value);
 
 static char* winpidgin_lcid_to_posix(LCID lcid) 
 {
@@ -370,7 +374,7 @@ static BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver)
 	return TRUE;
 }
 
-BOOL ExecCmd(HWND hwnd, const char* cmd)
+static BOOL ExecCmd(HWND hwnd, const char* cmd)
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -658,7 +662,7 @@ BOOL UpdateGrubCfg(HWND hwnd)
 	return TRUE;
 }
 
-BOOL ExecCmdOut(HWND hwnd, const char* cmd, char* buf)
+static BOOL ExecCmdOut(HWND hwnd, const char* cmd, char* buf)
 {
 	SECURITY_ATTRIBUTES sa;
 	HANDLE hRead,hWrite;
@@ -666,8 +670,6 @@ BOOL ExecCmdOut(HWND hwnd, const char* cmd, char* buf)
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
 	char buffer[4096] = {0};
-	int ret;
-	DWORD exitcode;
 
 	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
 	sa.lpSecurityDescriptor = NULL;
@@ -683,7 +685,7 @@ BOOL ExecCmdOut(HWND hwnd, const char* cmd, char* buf)
 	si.hStdOutput = hWrite;
 	si.wShowWindow = SW_HIDE;
 	si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
-	if (!CreateProcess(NULL, (LPSTR)cmd, NULL, NULL, TRUE, NULL, NULL, NULL, &si, &pi)) 
+	if (!CreateProcess(NULL, (LPSTR)cmd, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi)) 
 	{
 		return FALSE;
 	}
@@ -691,7 +693,7 @@ BOOL ExecCmdOut(HWND hwnd, const char* cmd, char* buf)
 
 	while(TRUE)
 	{
-		if (ReadFile(hRead, buffer, 4095, &bytesRead, NULL) == NULL)
+		if (!ReadFile(hRead, buffer, 4095, &bytesRead, NULL))
 			break;
 		if (buf != NULL)
 			strncat(buf, buffer, bytesRead);
@@ -700,7 +702,7 @@ BOOL ExecCmdOut(HWND hwnd, const char* cmd, char* buf)
 	return TRUE;
 }
 
-BOOL getRegedit(const char* key, char* value, size_t size)
+static BOOL getRegKey(const char* key, char* value, size_t size)
 {
 	HKEY hKey;
 	if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
@@ -724,7 +726,7 @@ BOOL getRegedit(const char* key, char* value, size_t size)
 	return FALSE;
 }
 
-BOOL writeRegedit(HWND hwnd, const char* key, const char* value)
+static BOOL writeRegKey(HWND hwnd, const char* key, const char* value)
 {
 	HKEY hKey;
 	if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
@@ -734,7 +736,6 @@ BOOL writeRegedit(HWND hwnd, const char* key, const char* value)
 				&hKey
 				)== ERROR_SUCCESS)
 	{
-		char ExePath[MAX_PATH];
 		long lRet;
 		lRet = RegSetValueEx(hKey, key, 0, REG_SZ, (BYTE *)value, strlen(value));
 		RegCloseKey(hKey);
@@ -756,7 +757,7 @@ BOOL CheckBootMgr(HWND hwnd)
 	char id[64] = {0};
 	int isInstalled = 0;
 
-	if (getRegedit("VistaBootDrive", &buf, sizeof(buf)))
+	if (getRegKey("VistaBootDrive", (char*) buf, sizeof(buf)))
 	{
 		if (strlen(buf) > 0)
 		{
@@ -800,7 +801,7 @@ BOOL CheckBootMgr(HWND hwnd)
 		snprintf(buf, 1024, "bcdedit /displayorder %s /addlast", id);
 		if (!ExecCmd(hwnd, buf))
 			return FALSE;
-		writeRegedit(hwnd, "VistaBootDrive", id);
+		writeRegKey(hwnd, "VistaBootDrive", id);
 
 		if (!CopyMbrFiles(hwnd, sysdriver))
 			return FALSE;
