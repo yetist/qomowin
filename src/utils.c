@@ -700,23 +700,29 @@ BOOL ExecCmdOut(HWND hwnd, const char* cmd, char* buf)
 	return TRUE;
 }
 
-BOOL getRegedit(const char* key, char* value)
+BOOL getRegedit(const char* key, char* value, size_t size)
 {
-    long size;
-    char buf[128];
-    char skey[512];
-    int iret;
+	HKEY hKey;
+	if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+				TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\qomowin"),
+				0,
+				KEY_READ|KEY_WRITE,
+				&hKey
+				)== ERROR_SUCCESS)
+	{
+		int iret;
+		DWORD dwType = REG_SZ;
+		iret = RegQueryValueEx(hKey, (LPSTR)key, NULL, &dwType, (LPBYTE)value, (LPDWORD) &size);
+		RegCloseKey(hKey);
 
-	snprintf(skey, sizeof(skey), "%s\\%s", "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\qomowin", key),
-	iret = RegQueryValue(HKEY_LOCAL_MACHINE, skey, value, &size);
-    if(0 == iret)
-    {
-        value[size] = 0;
-		return TRUE;
-    }
+		if(iret == 0)
+		{
+			value[size] = 0;
+			return TRUE;
+		}
+	}
 	return FALSE;
 }
-
 
 BOOL writeRegedit(HWND hwnd, const char* key, const char* value)
 {
@@ -746,11 +752,11 @@ BOOL writeRegedit(HWND hwnd, const char* key, const char* value)
 BOOL CheckBootMgr(HWND hwnd)
 {
 	char sysdriver[BUFSIZ] = {0}, *p = NULL;
-	char buf[10240] = {0};
+	char buf[1024] = {0};
 	char id[64] = {0};
 	int isInstalled = 0;
 
-	if (getRegedit("VistaBootDrive", buf))
+	if (getRegedit("VistaBootDrive", &buf, sizeof(buf)))
 	{
 		if (strlen(buf) > 0)
 		{

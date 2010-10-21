@@ -158,6 +158,10 @@ Section "Uninstall"
   RMDir "$SMPROGRAMS\$StartMenuFolder"
 
   DeleteRegKey /ifempty HKCU "Software\${PRODUCT_PACKAGE}"
+  ${If} ${AtLeastWinVISTA}
+    ReadRegStr $0 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_PACKAGE}" "VistaBootDrive"
+    !define VISTA_ID "$0"
+  ${EndIf}
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_PACKAGE}"
 
 SectionEnd
@@ -187,7 +191,15 @@ Function un.onUninstSuccess
   ${EndIf}
 
   ${If} ${AtLeastWinVISTA}
-    MessageBox MB_OK "bootmgr"
+    !ifdef VISTA_ID
+    	StrLen $8 "${VISTA_ID}"
+	IntCmp $8 1 done done next
+	next:
+		Exec "bcdedit /delete ${VISTA_ID}"
+		;ExecShell "open" '"$SYSDIR\bcdedit.exe /delete ${VISTA_ID}"' SW_HIDE
+		Goto done
+	done:
+    !endif
   ${EndIf}
   skip:
 FunctionEnd
