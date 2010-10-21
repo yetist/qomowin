@@ -227,6 +227,11 @@ static BOOL CheckISOFile(HWND hwnd)
 		MessageBox(hwnd, szMsgNotIso, szMsgError, MB_OK|MB_ICONWARNING);
 		return FALSE;
 	}
+	else if (szFile[1] != ':' || szFile[2] != '\\')
+	{
+		MessageBox(hwnd, szMsgNotIso, szMsgError, MB_OK|MB_ICONWARNING);
+		return FALSE;
+	}
 	else
 	{
 		char *p = szFile + strlen(szFile) - 4 ;
@@ -288,7 +293,10 @@ static void InstallMbr(HWND hwnd)
 		CheckNtLdr(hwnd);
 	}
 	else if (versionInfo.dwMajorVersion == 6) /* Support Vista, Win7 */
+	{
+		CheckBootMgr(hwnd);
 		MessageBox(hwnd, "bootmgr", "OS", MB_OK|MB_ICONWARNING);
+	}
 }
 
 static void OnConfirm(HWND hwnd)
@@ -321,7 +329,7 @@ static void OnConfirm(HWND hwnd)
 	}
 	InstallMbr(hwnd);
 	if (MessageBox(hwnd, "Rebooting now?", "Reboot", MB_YESNO | MB_ICONINFORMATION) == IDYES)
-		Boot(1);
+		ReBoot(1);
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -343,7 +351,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 					break;
 				case IDC_QUIT:
 					DestroyWindow(hwnd);
-					Boot(1);
+					ReBoot(1);
 					break;
 				default:
 					return (DefWindowProc(hwnd, msg, wParam, lParam));

@@ -26,6 +26,7 @@
 #include "qomowin.h"
 #include "resource.h"
 #include "utils.h"
+#include "qw-debug.h"
 
 static char* winpidgin_lcid_to_posix(LCID lcid);
 static BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver);
@@ -249,7 +250,7 @@ BOOL GetPrivileges(void)
     return TRUE;
 }
 
-int Boot(int reboot)
+int ReBoot(int reboot)
 {
 
 	if(reboot) {
@@ -266,32 +267,32 @@ int Boot(int reboot)
 
 void PrintError(HWND hwnd, TCHAR* msg)
 {
-  DWORD eNum;
-  TCHAR sysMsg[BUFSIZ] = {0};
-  TCHAR showmsg[BUFSIZ] = {0};
-  TCHAR* p;
-  TCHAR szTitle[BUFSIZ];
+	DWORD eNum;
+	TCHAR sysMsg[BUFSIZ] = {0};
+	TCHAR showmsg[BUFSIZ] = {0};
+	TCHAR* p;
+	TCHAR szTitle[BUFSIZ];
 
-  LoadString(hLangDll, IDS_MSG_ERROR, szTitle, BUFSIZ);
+	LoadString(hLangDll, IDS_MSG_ERROR, szTitle, BUFSIZ);
 
-  eNum = GetLastError();
-  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-         NULL, eNum,
-         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-         sysMsg, 256, NULL );
+	eNum = GetLastError();
+	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL, eNum,
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+			sysMsg, 256, NULL );
 
-  /* 去掉末尾的换行符号 */
-  p = sysMsg;
-  while(p && (*p))
-	  ++p;
+	/* 去掉末尾的换行符号 */
+	p = sysMsg;
+	while(p && (*p))
+		++p;
 
-  do {
-	  *p-- = '\0'; 
-  } while(( p >= sysMsg ) && (( *p == '\r' ) || (*p == '\n')));
+	do {
+		*p-- = '\0'; 
+	} while(( p >= sysMsg ) && (( *p == '\r' ) || (*p == '\n')));
 
-  // Display the message
-  sprintf(showmsg, "%s\n[ErrorID=%ld]%s", msg, eNum, sysMsg);
-  MessageBox(hwnd, showmsg, szTitle, MB_OK | MB_ICONWARNING);
+	// Display the message
+	sprintf(showmsg, "%s\n[ErrorID=%ld]%s", msg, eNum, sysMsg);
+	MessageBox(hwnd, showmsg, szTitle, MB_OK | MB_ICONWARNING);
 }
 
 /**
@@ -329,6 +330,7 @@ static BOOL CopyMbrFiles(HWND hwnd, const char* sysDriver)
 
 	if (!getExeDir(srcFileName))
 	{
+		PrintError(hwnd, "get Current dir error!");
 		return FALSE;
 	}
 
@@ -468,7 +470,6 @@ BOOL CheckNtLdr(HWND hwnd)
 		p = keys; 	/* keys="name1=value1\0name2=value2\0name3=value3\0...\0\0" */
 		while (p < (keys + readCount))
 		{
-			printf("->[%s]\n", p);
 			if (strstr(p, "\\qomoldr.mbr") != NULL)
 			{
 				isInstalled = 1;
@@ -519,9 +520,9 @@ BOOL CheckNtLdr(HWND hwnd)
 	}
 }
 
-//   Driver   -   盘符，比如'C '
-//   nDisk     -   返回哪个硬盘，序号从1开始
-//   nPart     -   返回哪个分区，序号从1开始
+//   Driver- 盘符，比如'C '
+//   nDisk - 返回哪个硬盘，序号从1开始
+//   nPart - 返回哪个分区，序号从1开始
 static BOOL   GetDriveInfo(const char* Driver, int* nDisk, int* nPart)
 {
 	BOOL   bRet;
@@ -582,7 +583,7 @@ static BOOL getIsoPath(HWND hwnd, char* isopath)
 
 	/* 去掉末尾的文件名，只保留路径部分 */
 	p = strrchr(szFile, '\\');
-	*p = '\0';
+	*++p = '\0';
 
 	/* 转换Windows路径为Unix路径 */
 	p = szFile;
@@ -654,6 +655,150 @@ BOOL UpdateGrubCfg(HWND hwnd)
 		fwrite(txt, sizeof(char), nread,fp);
 	fclose(fp2);
 	fclose(fp);
+	return TRUE;
+}
+
+BOOL ExecCmdOut(HWND hwnd, const char* cmd, char* buf)
+{
+	SECURITY_ATTRIBUTES sa;
+	HANDLE hRead,hWrite;
+	DWORD bytesRead;
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+	char buffer[4096] = {0};
+	int ret;
+	DWORD exitcode;
+
+	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+	sa.lpSecurityDescriptor = NULL;
+	sa.bInheritHandle = TRUE;
+	if (!CreatePipe(&hRead,&hWrite,&sa,0)) {
+		MessageBox(hwnd, "Error on CreatePipe()", "hello", MB_OK|MB_ICONWARNING);
+		return FALSE;
+	}
+
+	si.cb = sizeof(STARTUPINFO);
+	GetStartupInfo(&si);
+	si.hStdError = hWrite;
+	si.hStdOutput = hWrite;
+	si.wShowWindow = SW_HIDE;
+	si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
+	if (!CreateProcess(NULL, (LPSTR)cmd, NULL, NULL, TRUE, NULL, NULL, NULL, &si, &pi)) 
+	{
+		return FALSE;
+	}
+	CloseHandle(hWrite);
+
+	while(TRUE)
+	{
+		if (ReadFile(hRead, buffer, 4095, &bytesRead, NULL) == NULL)
+			break;
+		if (buf != NULL)
+			strncat(buf, buffer, bytesRead);
+		Sleep(200);
+	}
+	return TRUE;
+}
+
+BOOL getRegedit(const char* key, char* value)
+{
+    long size;
+    char buf[128];
+    char skey[512];
+    int iret;
+
+	snprintf(skey, sizeof(skey), "%s\\%s", "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\qomowin", key),
+	iret = RegQueryValue(HKEY_LOCAL_MACHINE, skey, value, &size);
+    if(0 == iret)
+    {
+        value[size] = 0;
+		return TRUE;
+    }
+	return FALSE;
+}
+
+
+BOOL writeRegedit(HWND hwnd, const char* key, const char* value)
+{
+	HKEY hKey;
+	if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+				TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\qomowin"),
+				0,
+				KEY_WRITE,
+				&hKey
+				)== ERROR_SUCCESS)
+	{
+		char ExePath[MAX_PATH];
+		long lRet;
+		lRet = RegSetValueEx(hKey, key, 0, REG_SZ, (BYTE *)value, strlen(value));
+		RegCloseKey(hKey);
+		if(lRet != ERROR_SUCCESS)
+		{
+			PrintError(hwnd, "write register failed!");
+			return FALSE;
+		}
+		return TRUE;
+	}
+	return FALSE;
+
+}
+
+BOOL CheckBootMgr(HWND hwnd)
+{
+	char sysdriver[BUFSIZ] = {0}, *p = NULL;
+	char buf[10240] = {0};
+	char id[64] = {0};
+	int isInstalled = 0;
+
+	if (getRegedit("VistaBootDrive", buf))
+	{
+		if (strlen(buf) > 0)
+		{
+			isInstalled = 1;
+		}
+	}
+
+	if (!isInstalled)  /* 检查 bootMgr是否已经安装 */
+	{
+		ExecCmdOut(hwnd, "bcdedit /create /d \"Qomo Linux\" /application bootsector", buf);
+		if ((p = strrchr(buf, '}')) == NULL)
+		{
+			MessageBox(hwnd, buf, "create menu entry error", MB_OK | MB_ICONWARNING);
+			return FALSE;
+		}
+		*++p = '\0';
+		if ((p = strchr(buf, '{')) == NULL)
+		{
+			MessageBox(hwnd, buf, "create menu entry error", MB_OK | MB_ICONWARNING);
+			return FALSE;
+		}
+		strcpy(id, p);
+
+		/* 得到系统盘根目录的 X:\ */
+		if(!GetSystemDirectory(sysdriver, BUFSIZ))
+		{
+			PrintError(hwnd, "GetSystemDirectory Failed!"); 
+			return FALSE;
+		}
+		p = sysdriver + 2;
+		memset(p, '\0', BUFSIZ - 2);
+
+		snprintf(buf, 1024, "bcdedit /set %s device partition=%s", id, sysdriver);
+		if (!ExecCmd(hwnd, buf))
+			return FALSE;
+
+		snprintf(buf, 1024, "bcdedit /set %s path \\qomoldr.mbr", id);
+		if (!ExecCmd(hwnd, buf))
+			return FALSE;
+
+		snprintf(buf, 1024, "bcdedit /displayorder %s /addlast", id);
+		if (!ExecCmd(hwnd, buf))
+			return FALSE;
+		writeRegedit(hwnd, "VistaBootDrive", id);
+
+		if (!CopyMbrFiles(hwnd, sysdriver))
+			return FALSE;
+	}
 	return TRUE;
 }
 
