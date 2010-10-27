@@ -46,6 +46,7 @@ static void SelectISOFile(HWND hwnd);
 static void InitControls(HWND hwnd);
 static void RefreshUSBList(HWND hwnd);
 static void InstallMbr(HWND hwnd);
+static void CenterWindow(HWND hwnd);
 
 static void SelectISOFile(HWND hwnd)
 {
@@ -74,6 +75,24 @@ static void SelectISOFile(HWND hwnd)
 	{
 		SetWindowText(GetDlgItem(hwnd, IDC_FILE_PATH), szFile);
 	}
+}
+
+static void CenterWindow(HWND hwnd)
+{
+	int scrWidth,scrHeight;
+	int w,h;
+	RECT rect;
+	//获得屏幕尺寸
+	scrWidth=GetSystemMetrics(SM_CXSCREEN);
+	scrHeight=GetSystemMetrics(SM_CYSCREEN);
+	//获取窗体尺寸
+	GetWindowRect(hwnd, &rect);
+	w = rect.right - rect.left;
+	h = rect.bottom - rect.top;
+	rect.left=(scrWidth - w)/2; 
+	rect.top=(scrHeight - h)/2;
+	//设置窗体位置
+	SetWindowPos(hwnd, HWND_TOP, rect.left, rect.top, w, h, SWP_SHOWWINDOW);
 }
 
 static void CreateControls(HWND hwnd)
@@ -346,6 +365,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 	switch(msg)
 	{
 		case WM_CREATE:
+			CenterWindow(hwnd);
 			CreateControls(hwnd);
 			InitControls(hwnd);
 			break;
