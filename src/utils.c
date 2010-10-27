@@ -297,6 +297,7 @@ void PrintError(HWND hwnd, TCHAR* msg)
 
 	// Display the message
 	sprintf(showmsg, "%s\n[ErrorID=%ld]%s", msg, eNum, sysMsg);
+	SendMessage(GetDlgItem(hwnd, IDC_MAIN_STATUS), SB_SETTEXT, 0, showmsg);
 	MessageBox(hwnd, showmsg, szTitle, MB_OK | MB_ICONWARNING);
 }
 
@@ -912,7 +913,7 @@ BOOL ISO2USB(HWND hwnd, const char* driver, const char* label)
 		fclose(fp2);
 
 		/* 安装syslinux 的引导项 */
-		snprintf(cmd, sizeof(cmd), "%s\\bin\\syslinux.exe -sfmar -d \\boot\\syslinux %s", driver);
+		snprintf(cmd, sizeof(cmd), "%s\\bin\\syslinux.exe -sfmar -d \\boot\\syslinux %s", cwd, driver);
 		debug_msg(hwnd, cmd);
 		if (!ExecCmd(hwnd, cmd))
 		{

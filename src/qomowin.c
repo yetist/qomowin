@@ -118,7 +118,7 @@ static void CreateControls(HWND hwnd)
 	hCtrl = CreateWindow("STATIC", szText, WS_CHILD | WS_VISIBLE | SS_SIMPLE, x, 25, w, 20, hwnd, (HMENU)234, hInstance, NULL);
 
 	LoadString(hLangDll, IDS_APP_FRAME, szText, MAX_LOADSTRING);
-	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_GROUPBOX|WS_GROUP | WS_TABSTOP,50,55,395,120,hwnd,(HMENU)IDC_STATIC,hInstance,NULL);                           
+	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_GROUPBOX|WS_GROUP | WS_TABSTOP,50,55,395,90,hwnd,(HMENU)IDC_STATIC,hInstance,NULL);                           
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	LoadString(hLangDll, IDS_APP_HD_INST, szText, MAX_LOADSTRING);
@@ -126,50 +126,56 @@ static void CreateControls(HWND hwnd)
 	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON | WS_TABSTOP, 75,80,w,20, hwnd,(HMENU) IDC_HD_INST , hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
+	/*
 	LoadString(hLangDll, IDS_APP_HD_UNINST, szText, MAX_LOADSTRING);
 	w = dwCharW * (strlen(szText) + 4);
 	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON | WS_TABSTOP, 75,110,w,20,hwnd,(HMENU) IDC_HD_UNINST, hInstance,   NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
+	*/
 
 	LoadString(hLangDll, IDS_APP_USB_INST, szText, MAX_LOADSTRING);
 	w = dwCharW * (strlen(szText) + 4);
-	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON | WS_TABSTOP, 75, 140, w, 20, hwnd,(HMENU) IDC_USB_INST, hInstance,   NULL);
+	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON | WS_TABSTOP, 75, 110, w, 20, hwnd,(HMENU) IDC_USB_INST, hInstance,   NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
-	hCtrl = CreateWindow("COMBOBOX", NULL, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|CBS_DROPDOWNLIST|WS_BORDER, 75 + w,140, 60, 150, hwnd,(HMENU)IDC_USB_LIST, hInstance, NULL);
+	hCtrl = CreateWindow("COMBOBOX", NULL, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|CBS_DROPDOWNLIST|WS_BORDER, 75 + w,110, 60, 150, hwnd,(HMENU)IDC_USB_LIST, hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	LoadString(hLangDll, IDS_APP_ISO_FILE, szText, MAX_LOADSTRING);
 	w = dwCharW * strlen(szText);
-	hCtrl = CreateWindow("STATIC", szText, WS_CHILD | WS_VISIBLE |SS_LEFT | WS_TABSTOP, 50, 187, w, 20, hwnd, (HMENU)IDC_STATIC, hInstance, NULL);                          
+	hCtrl = CreateWindow("STATIC", szText, WS_CHILD | WS_VISIBLE |SS_LEFT | WS_TABSTOP, 50, 157, w, 20, hwnd, (HMENU)IDC_STATIC, hInstance, NULL);                          
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
-	hCtrl = CreateWindow("EDIT",NULL,WS_CHILD|WS_VISIBLE|WS_BORDER|ES_AUTOVSCROLL|ES_LEFT|ES_AUTOHSCROLL | WS_TABSTOP, 122, 185, 270, 20, hwnd,(HMENU)IDC_FILE_PATH, hInstance, NULL);
+	hCtrl = CreateWindow("EDIT",NULL,WS_CHILD|WS_VISIBLE|WS_BORDER|ES_AUTOVSCROLL|ES_LEFT|ES_AUTOHSCROLL | WS_TABSTOP, 122, 155, 270, 20, hwnd,(HMENU)IDC_FILE_PATH, hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	LoadString(hLangDll, IDS_APP_BROWSER, szText, MAX_LOADSTRING);
 	w = dwCharW * (strlen(szText) + 4);
-	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, 395,185, w, 26, hwnd, (HMENU)IDC_BROWSER, hInstance, NULL);
+	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, 395, 155, w, 26, hwnd, (HMENU)IDC_BROWSER, hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
+
+	/* 画水平线 */
 
 	LoadString(hLangDll, IDS_APP_HOMEPAGE, szText, MAX_LOADSTRING);
 	w = dwCharW * strlen(szText);
-	hCtrl = CreateWindow("STATIC", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, 50, rect.bottom-33, w, 20, hwnd, (HMENU)IDC_STATIC, hInstance, NULL);   
+	hCtrl = CreateWindow("STATIC", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, 50, rect.bottom-63, w, 20, hwnd, (HMENU)IDC_STATIC, hInstance, NULL);   
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	sprintf(szText, " http://www.linux-ren.org");
-	hCtrl = CreateWindow("STATIC", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, 50 + w, rect.bottom-33, dwCharW * (strlen(szText) + 4), 20, hwnd, (HMENU)IDC_HOMEPAGE, hInstance, NULL);
+	hCtrl = CreateWindow("STATIC", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, 50 + w, rect.bottom-63, dwCharW * (strlen(szText) + 4), 20, hwnd, (HMENU)IDC_HOMEPAGE, hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	LoadString(hLangDll, IDS_APP_QUIT, szText, MAX_LOADSTRING);
 	w = dwCharW * (strlen(szText) + 4);
-	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, rect.right-85, rect.bottom-33, w, 26, hwnd, (HMENU)IDC_QUIT, hInstance, NULL);   
+	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, rect.right-85, rect.bottom-63, w, 26, hwnd, (HMENU)IDC_QUIT, hInstance, NULL);   
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	LoadString(hLangDll, IDS_APP_CONFIRM, szText, MAX_LOADSTRING);
 	w = dwCharW * (strlen(szText) + 4);
-	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, rect.right-160, rect.bottom-33, w, 26, hwnd, (HMENU)IDC_CONFIRM, hInstance, NULL);
+	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, rect.right-160, rect.bottom-63, w, 26, hwnd, (HMENU)IDC_CONFIRM, hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
+
+	CreateWindowEx(0, STATUSCLASSNAME, NULL, WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, (HMENU)IDC_MAIN_STATUS, GetModuleHandle(NULL), NULL);
 }
 
 static void RefreshUSBList(HWND hwnd)
