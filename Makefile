@@ -25,7 +25,7 @@ setup: qomowin-pre-setup
 wubizip: qomowin-pre-setup
 	cd nsis; zip -r wubi.zip wubi
 
-qomowin-pre-setup: check_wine qomowin winboot2 grublocale
+qomowin-pre-setup: check_wine winboot2 qomowin grublocale
 	rm -rf dist
 	mkdir -p dist/{locale,bin}
 	#cd dist; ../tools/gencert.sh
