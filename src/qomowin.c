@@ -34,14 +34,9 @@
 #include "resource.h" 
 #include "qomowin.h" 
 #include "utils.h" 
+#include "qw-debug.h" 
 
 #define MAX_LOADSTRING	100	
-#define LANG(P,ID) \
-    TCHAR       szTemp##P##ID[MAX_LOADSTRING]; \
-    LoadString(hLangDll, IDS_##P##_##ID , szTemp##P##ID, MAX_LOADSTRING)
-
-#define MSGLANG(ID) szTempMSG##ID
-
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static BOOL InitApplication(HINSTANCE hInstance);
@@ -326,7 +321,17 @@ static void OnConfirm(HWND hwnd)
 	}
 	else if ( BST_CHECKED == SendMessage(GetDlgItem(hwnd, IDC_USB_INST), BM_GETCHECK, 0, 0))
 	{
-		MessageBox(hwnd, "select usb disk installer", "This program is", MB_OK | MB_ICONINFORMATION);
+		int len;
+		char driver[10] = {0};
+
+		len = GetWindowText(GetDlgItem(hwnd, IDC_USB_LIST), driver, 8);
+		if (len == 0)
+		{
+			MessageBox(hwnd, "not select usb disk", "error", MB_OK | MB_ICONINFORMATION);
+			return;
+		}
+		FormatDriver(hwnd, driver, "QOMOLIVEUSB");
+		ISO2USB(hwnd, driver);
 	}
 }
 

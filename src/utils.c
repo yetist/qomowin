@@ -22,6 +22,7 @@
 #include <shlwapi.h>
 #include <winioctl.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include "qomowin.h"
 #include "resource.h"
@@ -808,6 +809,58 @@ BOOL CheckBootMgr(HWND hwnd)
 	}
 	return TRUE;
 }
+
+BOOL FormatDriver(HWND hwnd, const char* driver, const char* label)
+{
+	int driver_number;
+	char volume[12] = {0};
+	DWORD ret;
+
+	driver_number = toupper(driver[0]) -'A';
+	if (driver_number <0 || driver_number > 25)
+		return FALSE;
+	ret = SHFormatDrive(hwnd, driver_number, SHFMT_ID_DEFAULT, 0);
+	if (ret == -1)
+	{
+		if (msg_yesno(hwnd, "Format failed, continue?") == IDNO)
+			return FALSE;
+	}
+	snprintf(volume, sizeof(volume), label);
+	if (!SetVolumeLabel(driver, volume))
+	{
+		msg_info(hwnd, "Setup Volume Label Failed.");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+BOOL ISO2USB(HWND hwnd, const char* driver)
+{
+	char szFile[MAX_PATH] = {0};
+	char cwd[MAX_PATH] = {0};
+	char cmd[BUFSIZ] = {0};
+
+	/* 7z 提取命令：
+	 * 7z e -o/tmp/ ~/Qomo1.iso isolinux/initrd0.img
+	 * 将~/Qomo1.iso中的文件isolinux/initrd0.img解压到/tmp目录中
+	 * */
+
+	if (getExeDir(cwd))
+	{
+		SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
+		snprintf(cmd, sizeof(cmd), "%s\\bin\\7z.exe x -y \"-o%s\" \"%s\" ", cwd, driver, szFile);
+		debug_msg(hwnd, "%s", cmd);
+		if (!ExecCmd(hwnd, cmd))
+		{
+			PrintError(hwnd, "extract initrd from iso failed.");
+			return FALSE;
+		}
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+}
+
 
 /*
 vi:ts=4:wrap:ai:

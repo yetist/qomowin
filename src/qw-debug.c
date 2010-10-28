@@ -1,8 +1,8 @@
 /* vi: set sw=4 ts=4: */
 /*
- * utils.h: This file is part of ____
+ * debug.c: This file is part of ____
  *
- * Copyright (C) 2010 yetist <yetist@gmail.com>
+ * Copyright (C) 2010 yetist <wuxiaotian@redflag-linux.com>
  *
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -18,26 +18,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * */
+#include <stdarg.h>
+#include "qw-debug.h"
 
-#ifndef __UTILS_H__ 
-#define __UTILS_H__  1
-#include <windows.h>
-#include <stdio.h>
+int qw_log(HWND hwnd, UINT type, const char* title, const char *fmt, ...)
+{
+	va_list ap;
+	char msg[BUFSIZ];
 
-HMODULE		LoadLangDll(const char* locale);
-const char * winpidgin_get_locale(void);
-BOOL GetPrivileges(void);
-BOOL getExeDir(char* path);
-int ReBoot(int reboot);
-void PrintError(HWND hwnd, TCHAR* msg);
-BOOL CheckNtLdr(HWND hwnd);
-BOOL ExtractISO(HWND hwnd);
-BOOL UpdateGrubCfg(HWND hwnd);
-BOOL CheckBootMgr(HWND hwnd);
-BOOL FormatDriver(HWND hwnd, const char* driver, const char* label);
-BOOL ISO2USB(HWND hwnd, const char* driver);
+	va_start(ap, fmt);
+	vsnprintf(msg, sizeof(msg), fmt, ap);
+	va_end(ap);
+	return MessageBox(hwnd, msg, title, type);
+}
 
-#endif /* __UTILS_H__ */
+int qw_msg(HWND hwnd, const char* file, int line, const char* func, const char *fmt, ...)
+{
+	va_list ap;
+	char msg[BUFSIZ];
+
+	va_start(ap, fmt);
+	vsnprintf(msg, sizeof(msg), fmt, ap);
+	va_end(ap);
+
+	return msg_info(hwnd, "%s:%d %s() %s\n", file, line, func, msg);
+}
 
 /*
 vi:ts=4:wrap:ai:
