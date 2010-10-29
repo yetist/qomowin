@@ -35,7 +35,7 @@ BOOL ExtractISO(HWND hwnd);
 BOOL UpdateGrubCfg(HWND hwnd);
 BOOL CheckBootMgr(HWND hwnd);
 BOOL FormatDriver(HWND hwnd, const char* driver, const char* label);
-BOOL ISO2USB(HWND hwnd, const char* driver);
+BOOL ISO2USB(HWND hwnd, const char* driver, const char* label);
 
 #endif /* __UTILS_H__ */
 

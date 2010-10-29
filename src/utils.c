@@ -834,25 +834,89 @@ BOOL FormatDriver(HWND hwnd, const char* driver, const char* label)
 	return TRUE;
 }
 
-BOOL ISO2USB(HWND hwnd, const char* driver)
+BOOL ISO2USB(HWND hwnd, const char* driver, const char* label)
 {
-	char szFile[MAX_PATH] = {0};
 	char cwd[MAX_PATH] = {0};
-	char cmd[BUFSIZ] = {0};
 
-	/* 7z 提取命令：
-	 * 7z e -o/tmp/ ~/Qomo1.iso isolinux/initrd0.img
-	 * 将~/Qomo1.iso中的文件isolinux/initrd0.img解压到/tmp目录中
+	/* 7z 解压命令：
+	 * 7z x -y -o/tmp/ ~/Qomo1.iso
+	 * 将~/Qomo1.iso中的文件全部解压到/tmp目录中
 	 * */
 
 	if (getExeDir(cwd))
 	{
+		int ret;
+		char szFile[MAX_PATH] = {0};
+		char cmd[BUFSIZ] = {0};
+		//char tmppath[255] = {0};
+		char line[BUFSIZ];
+		FILE *fp1;
+		FILE *fp2;
+
+		/* 解压 ISO到临时文件 */
+		//GetTempPath(255, tmppath);
+		//strcat(tmppath, "qomoliveusb");
 		SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
 		snprintf(cmd, sizeof(cmd), "%s\\bin\\7z.exe x -y \"-o%s\" \"%s\" ", cwd, driver, szFile);
 		debug_msg(hwnd, "%s", cmd);
 		if (!ExecCmd(hwnd, cmd))
 		{
 			PrintError(hwnd, "extract initrd from iso failed.");
+			return FALSE;
+		}
+
+		/* 重命名isolinux到syslinux */
+		snprintf(szFile, sizeof(szFile), "%s\\isolinux", driver);
+		snprintf(cmd, sizeof(cmd), "%s\\syslinux", driver);
+		if (rename(szFile, cmd) != 0)
+		{
+			msg_error(hwnd, "Rename %s to %s failed", szFile, cmd);
+			return FALSE;
+		}
+
+		/* 重命名isolinux.cfg到syslinux.cfg,并修改root参数 */
+		snprintf(szFile, sizeof(szFile), "%s\\syslinux\\isolinux.cfg", driver);
+		snprintf(cmd, sizeof(cmd), "%s\\syslinux\\syslinux.cfg", driver);
+		fp1 = fopen(szFile, "r");
+		fp2 = fopen(cmd, "w");
+		while (fgets(line, sizeof(line), fp1) != NULL)
+		{
+			char *p;
+			if ((p = strstr(line, "root=live")) != NULL)
+			{
+				char *p2;
+				char newline[BUFSIZ];
+				p2 = strchr(p, ' ');
+				*p='\0';
+				snprintf(newline, sizeof(newline), "%sroot=live:LABEL=%s%s", line, label, p2);
+				debug_msg(hwnd, "p=%s, p2=%s", p, p2);
+				debug_msg(hwnd, newline);
+				if (fputs(newline, fp2) == EOF)
+				{
+					msg_error(hwnd, "Write file %s error!", cmd);
+					fclose(fp1);
+					fclose(fp2);
+					return FALSE;
+				}
+			} else {
+				if (fputs(line, fp2) == EOF)
+				{
+					msg_error(hwnd, "Write file %s error!", cmd);
+					fclose(fp1);
+					fclose(fp2);
+					return FALSE;
+				}
+			}
+		}
+		fclose(fp1);
+		fclose(fp2);
+
+		/* 安装syslinux 的引导项 */
+		snprintf(cmd, sizeof(cmd), "%s\\bin\\syslinux.exe -sfmar -d \\boot\\syslinux %s", driver);
+		debug_msg(hwnd, cmd);
+		if (!ExecCmd(hwnd, cmd))
+		{
+			PrintError(hwnd, "create boot loader failed.");
 			return FALSE;
 		}
 		return TRUE;

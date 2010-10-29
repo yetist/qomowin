@@ -331,7 +331,7 @@ static void OnConfirm(HWND hwnd)
 			return;
 		}
 		FormatDriver(hwnd, driver, "QOMOLIVEUSB");
-		ISO2USB(hwnd, driver);
+		ISO2USB(hwnd, driver, "QOMOLIVEUSB");
 	}
 }
 

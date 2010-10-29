@@ -34,6 +34,7 @@ qomowin-pre-setup: check_wine winboot2 qomowin grublocale
 	cp -f  build/src/qomowin.exe dist/qomowin.exe
 	cp -f build/src/locale/zh_CN.dll dist/locale/zh_CN.dll
 	cp -f wine/drive_c/Program\ Files/7-Zip/7z.{exe,dll} dist/bin
+	cp -f tools/syslinux.exe dist/bin
 	cp -rf build/data/qomo-logo.ico build/winboot nsis/* dist
 	rm -rf build/{winboot,src,data}
 
