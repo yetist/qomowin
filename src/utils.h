@@ -31,7 +31,7 @@ BOOL getExeDir(char* path);
 int ReBoot(int reboot);
 void PrintError(HWND hwnd, TCHAR* msg);
 BOOL CheckNtLdr(HWND hwnd);
-BOOL ExtractISO(HWND hwnd);
+BOOL ExtractKernel(HWND hwnd);
 BOOL UpdateGrubCfg(HWND hwnd);
 BOOL CheckBootMgr(HWND hwnd);
 BOOL FormatDriver(HWND hwnd, const char* driver, const char* label);

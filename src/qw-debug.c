@@ -19,9 +19,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * */
 #include <stdarg.h>
+#include "qomowin.h"
 #include "qw-debug.h"
+#include "resource.h"
 
-int qw_log(HWND hwnd, UINT type, const char* title, const char *fmt, ...)
+#define def_msgfunc(fname, msgid, btnid, iconid) \
+	int msg_##fname (HWND hwnd, const char* fmt, ...) { \
+		va_list ap;	\
+		char msg[BUFSIZ];	\
+		char szTitle[BUFSIZ];	\
+		LoadString(hLangDll, IDS_MSG_##msgid, szTitle, sizeof(szTitle));	\
+		va_start(ap, fmt);	\
+		vsnprintf(msg, sizeof(msg), fmt, ap);	\
+		va_end(ap);	\
+		return qw_log(hwnd, MB_##btnid | MB_##iconid, szTitle, "%s", msg);	\
+	}
+
+static int qw_log(HWND hwnd, UINT type, const char* title, const char *fmt, ...);
+
+static int qw_log(HWND hwnd, UINT type, const char* title, const char *fmt, ...)
 {
 	va_list ap;
 	char msg[BUFSIZ];
@@ -44,6 +60,8 @@ int qw_msg(HWND hwnd, const char* file, int line, const char* func, const char *
 	return msg_info(hwnd, "%s:%d %s() %s\n", file, line, func, msg);
 }
 
-/*
-vi:ts=4:wrap:ai:
-*/
+def_msgfunc(info, INFO, OK, ICONINFORMATION);
+def_msgfunc(warn, WARNING, OK, ICONWARNING);
+def_msgfunc(error, ERROR, OK, ICONERROR);
+def_msgfunc(yesno, QUESTION, YESNO, ICONQUESTION);
+

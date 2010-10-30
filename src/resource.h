@@ -24,7 +24,6 @@
 #define __RESOURCE_H__  1
 
 #define IDC_HD_INST				101
-#define IDC_HD_UNINST			102
 #define IDC_USB_INST            103
 #define IDC_FILE_PATH			104
 #define IDC_BROWSER             105
@@ -50,11 +49,19 @@
 #define IDS_OFN_TITLE			3012
 #define IDS_APP_HOMEPAGE		3013
 
-#define IDS_MSG_ERROR			4001
-#define IDS_MSG_WARNING			4002
-#define IDS_MSG_NOT_ISO			4003
-#define IDS_MSG_FILE_NOT_EXISTS	4004
-#define IDS_HELLO				4005
+#define IDS_MSG_INFO			4001
+#define IDS_MSG_ERROR			4002
+#define IDS_MSG_WARNING			4003
+#define IDS_MSG_QUESTION		4004
+
+#define IDS_MSG_NOT_ISO			4010
+#define IDS_MSG_FILE_NOT_EXISTS	4021
+#define IDS_MSG_GET_VER_ERR		4022
+#define IDS_EXTRACT_KERNEL_E	4023
+#define IDS_UPDATE_GRUBCFG_E	4024
+#define IDS_REBOOT_NOW			4025
+#define IDS_INSERT_USB_DISK		4026
+#define IDS_HELLO				4032
 
 #endif /* __RESOURCE_H__ */
 

@@ -25,13 +25,12 @@
 #include <windows.h>
 #include <stdio.h>
 
-int qw_log(HWND hwnd, UINT type, const char* title, const char *fmt, ...);
 int qw_msg(HWND hwnd, const char* file, int line, const char* func, const char *fmt, ...);
 
-#define msg_info(hwnd, fmt, arg...) qw_log(hwnd, MB_OK | MB_ICONINFORMATION, "Info", fmt, ##arg)
-#define msg_warn(hwnd, fmt, arg...) qw_log(hwnd, MB_OK | MB_ICONWARNING, "Warning", fmt, ##arg)
-#define msg_error(hwnd, fmt, arg...) qw_log(hwnd, MB_OK | MB_ICONERROR, "Error", fmt, ##arg)
-#define msg_yesno(hwnd, fmt, arg...) qw_log(hwnd, MB_YESNO | MB_ICONQUESTION, "Question", fmt, ##arg)
+int msg_info(HWND hwnd, const char* fmt, ...);
+int msg_warn(HWND hwnd, const char* fmt, ...);
+int msg_error(HWND hwnd, const char* fmt, ...);
+int msg_yesno(HWND hwnd, const char* fmt, ...);
 
 #ifdef _DEBUG
 #	define debug_msg(handle, arg...) qw_msg(handle, __FILE__, __LINE__, __FUNCTION__, ##arg);

@@ -145,13 +145,6 @@ static void CreateControls(HWND hwnd)
 	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON | WS_TABSTOP, 75,80,w,20, hwnd,(HMENU) IDC_HD_INST , hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
-	/*
-	LoadString(hLangDll, IDS_APP_HD_UNINST, szText, MAX_LOADSTRING);
-	w = dwCharW * (strlen(szText) + 4);
-	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON | WS_TABSTOP, 75,110,w,20,hwnd,(HMENU) IDC_HD_UNINST, hInstance,   NULL);
-	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
-	*/
-
 	LoadString(hLangDll, IDS_APP_USB_INST, szText, MAX_LOADSTRING);
 	w = dwCharW * (strlen(szText) + 4);
 	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON | WS_TABSTOP, 75, 110, w, 20, hwnd,(HMENU) IDC_USB_INST, hInstance,   NULL);
@@ -227,29 +220,25 @@ static void RefreshUSBList(HWND hwnd)
 static void InitControls(HWND hwnd)
 {
 	SendMessage(GetDlgItem(hwnd, IDC_HD_INST), BM_SETCHECK, BST_CHECKED, 0);
-	EnableWindow(GetDlgItem(hwnd, IDC_HD_UNINST), FALSE);
 	RefreshUSBList(hwnd);
 }
 
 static BOOL CheckISOFile(HWND hwnd)
 {
 	char szFile[MAX_PATH];
-	char szMsgNotIso[MAX_LOADSTRING];
-	char szMsgError[MAX_LOADSTRING];
-	char szMsgFileNotExists[MAX_LOADSTRING];
+	char MsgInfo[BUFSIZ];
 	int len;
 
+	LoadString(hLangDll, IDS_MSG_NOT_ISO, MsgInfo, sizeof(MsgInfo));
 	SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
-	LoadString(hLangDll, IDS_MSG_ERROR, szMsgError, MAX_LOADSTRING);
-	LoadString(hLangDll, IDS_MSG_NOT_ISO, szMsgNotIso, MAX_LOADSTRING);
 	if ((len = strlen(szFile)) < 6)
 	{
-		MessageBox(hwnd, szMsgNotIso, szMsgError, MB_OK|MB_ICONWARNING);
+		msg_error(hwnd, MsgInfo);
 		return FALSE;
 	}
 	else if (szFile[1] != ':' || szFile[2] != '\\')
 	{
-		MessageBox(hwnd, szMsgNotIso, szMsgError, MB_OK|MB_ICONWARNING);
+		msg_error(hwnd, MsgInfo);
 		return FALSE;
 	}
 	else
@@ -257,15 +246,15 @@ static BOOL CheckISOFile(HWND hwnd)
 		char *p = szFile + strlen(szFile) - 4 ;
 		if (strncmp(p, ".iso", 4) != 0 && strncmp(p, ".ISO", 4) != 0)
 		{
-			MessageBox(hwnd, szMsgNotIso, szMsgError, MB_OK|MB_ICONWARNING);
+			msg_error(hwnd, MsgInfo);
 			return FALSE;
 		}
 		else
 		{
 			if (! PathFileExists(szFile))
 			{
-				LoadString(hLangDll, IDS_MSG_FILE_NOT_EXISTS, szMsgFileNotExists, MAX_LOADSTRING);
-				MessageBox(hwnd, szMsgFileNotExists, szMsgError, MB_OK|MB_ICONWARNING);
+				LoadString(hLangDll, IDS_MSG_FILE_NOT_EXISTS, MsgInfo, sizeof(MsgInfo));
+				msg_error(hwnd, MsgInfo);
 				return FALSE;
 			}
 		}
@@ -281,7 +270,9 @@ static void InstallMbr(HWND hwnd)
 	//   获得版本信息
 	if (!GetVersionEx (&versionInfo))
 	{
-		MessageBox(hwnd, "Not get version info", "OS", MB_OK|MB_ICONWARNING);
+		char MsgInfo[BUFSIZ];
+		LoadString(hLangDll, IDS_MSG_GET_VER_ERR, MsgInfo, sizeof(MsgInfo));
+		msg_error(hwnd, MsgInfo);
 		return;
 	}
 	 
@@ -319,6 +310,7 @@ static void InstallMbr(HWND hwnd)
 
 static void OnConfirm(HWND hwnd)
 {
+	char MsgInfo[BUFSIZ];
 	if (CheckISOFile(hwnd) != TRUE)
 	{
 		return;
@@ -326,23 +318,22 @@ static void OnConfirm(HWND hwnd)
 
 	if ( BST_CHECKED == SendMessage(GetDlgItem(hwnd, IDC_HD_INST), BM_GETCHECK, 0, 0))
 	{
-		if (ExtractISO(hwnd) != TRUE)
+		if (ExtractKernel(hwnd) != TRUE)
 		{
-			MessageBox(hwnd, "F2", "FAIL", MB_OK | MB_ICONINFORMATION);
+			LoadString(hLangDll, IDS_EXTRACT_KERNEL_E, MsgInfo, sizeof(MsgInfo));
+			msg_error(hwnd, MsgInfo);
 			return;
 		}
 		if (UpdateGrubCfg(hwnd) != TRUE)
 		{
-			MessageBox(hwnd, "Update grub.cfg error", "error", MB_OK | MB_ICONINFORMATION);
+			LoadString(hLangDll, IDS_UPDATE_GRUBCFG_E, MsgInfo, sizeof(MsgInfo));
+			msg_error(hwnd, MsgInfo);
 			return;
 		}
 		InstallMbr(hwnd);
-		if (MessageBox(hwnd, "Rebooting now?", "Reboot", MB_YESNO | MB_ICONINFORMATION) == IDYES)
+		LoadString(hLangDll, IDS_REBOOT_NOW, MsgInfo, sizeof(MsgInfo));
+		if (msg_yesno(hwnd, MsgInfo)  == IDYES)
 			ReBoot(1);
-	}
-	else if ( BST_CHECKED == SendMessage(GetDlgItem(hwnd, IDC_HD_UNINST), BM_GETCHECK, 0, 0))
-	{
-		MessageBox(hwnd, "select hdisk uninstaller", "This program is", MB_OK | MB_ICONINFORMATION);
 	}
 	else if ( BST_CHECKED == SendMessage(GetDlgItem(hwnd, IDC_USB_INST), BM_GETCHECK, 0, 0))
 	{
@@ -352,7 +343,8 @@ static void OnConfirm(HWND hwnd)
 		len = GetWindowText(GetDlgItem(hwnd, IDC_USB_LIST), driver, 8);
 		if (len == 0)
 		{
-			MessageBox(hwnd, "not select usb disk", "error", MB_OK | MB_ICONINFORMATION);
+			LoadString(hLangDll, IDS_INSERT_USB_DISK, MsgInfo, sizeof(MsgInfo));
+			msg_error(hwnd, MsgInfo);
 			return;
 		}
 		FormatDriver(hwnd, driver, "QOMOLIVEUSB");

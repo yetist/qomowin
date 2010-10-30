@@ -276,9 +276,6 @@ void PrintError(HWND hwnd, TCHAR* msg)
 	TCHAR sysMsg[BUFSIZ] = {0};
 	TCHAR showmsg[BUFSIZ] = {0};
 	TCHAR* p;
-	TCHAR szTitle[BUFSIZ];
-
-	LoadString(hLangDll, IDS_MSG_ERROR, szTitle, BUFSIZ);
 
 	eNum = GetLastError();
 	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -296,9 +293,9 @@ void PrintError(HWND hwnd, TCHAR* msg)
 	} while(( p >= sysMsg ) && (( *p == '\r' ) || (*p == '\n')));
 
 	// Display the message
-	sprintf(showmsg, "%s\n[ErrorID=%ld]%s", msg, eNum, sysMsg);
+	snprintf(showmsg, sizeof(showmsg), "%s\n[ErrorID=%ld]%s", msg, eNum, sysMsg);
 	SendMessage(GetDlgItem(hwnd, IDC_MAIN_STATUS), SB_SETTEXT, 0, showmsg);
-	MessageBox(hwnd, showmsg, szTitle, MB_OK | MB_ICONWARNING);
+	msg_error(hwnd, showmsg);
 }
 
 /**
@@ -406,7 +403,7 @@ static BOOL ExecCmd(HWND hwnd, const char* cmd)
 	return TRUE;
 }
 
-BOOL ExtractISO(HWND hwnd)
+BOOL ExtractKernel(HWND hwnd)
 {
 	char szFile[MAX_PATH] = {0};
 	char cwd[MAX_PATH] = {0};
@@ -913,7 +910,7 @@ BOOL ISO2USB(HWND hwnd, const char* driver, const char* label)
 		fclose(fp2);
 
 		/* 安装syslinux 的引导项 */
-		snprintf(cmd, sizeof(cmd), "%s\\bin\\syslinux.exe -sfmar -d \\boot\\syslinux %s", cwd, driver);
+		snprintf(cmd, sizeof(cmd), "%s\\bin\\syslinux.exe -sfmar -d \\syslinux %s", cwd, driver);
 		debug_msg(hwnd, cmd);
 		if (!ExecCmd(hwnd, cmd))
 		{
@@ -925,7 +922,6 @@ BOOL ISO2USB(HWND hwnd, const char* driver, const char* label)
 		return FALSE;
 	}
 }
-
 
 /*
 vi:ts=4:wrap:ai:
