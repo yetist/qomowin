@@ -32,6 +32,7 @@
 #define IDC_QUIT                108
 #define IDC_HOMEPAGE            109
 #define IDC_MAIN_STATUS			110
+#define IDC_MAIN_PROGRESS		111
 
 #define IDI_APP_ICON			2001
 #define IDS_APP_FONT			2002

@@ -187,7 +187,15 @@ static void CreateControls(HWND hwnd)
 	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, rect.right-160, rect.bottom-63, w, 26, hwnd, (HMENU)IDC_CONFIRM, hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
-	CreateWindowEx(0, STATUSCLASSNAME, NULL, WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, (HMENU)IDC_MAIN_STATUS, GetModuleHandle(NULL), NULL);
+	/* create status bar */
+	hCtrl = CreateWindowEx(0, STATUSCLASSNAME, NULL, WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, (HMENU)IDC_MAIN_STATUS, GetModuleHandle(NULL), NULL);
+
+	/* create progress bar */
+	GetWindowRect(hCtrl, &rect);
+	hCtrl = CreateWindowEx(0, PROGRESS_CLASS, (LPSTR)NULL, WS_CHILD | WS_VISIBLE, 1, 50, rect.right - rect.left, rect.bottom - rect.top, hwnd, (HMENU)IDC_MAIN_PROGRESS, hInstance, NULL); 
+	SendMessage(hCtrl, PBM_SETRANGE, 0, MAKELPARAM (0,100));
+	SendMessage(hCtrl, PBM_SETPOS, (WPARAM)33, 0);
+
 }
 
 static void RefreshUSBList(HWND hwnd)
