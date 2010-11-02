@@ -1,1 +1,4 @@
 qomowin
+
+在Qomo下面编译时使用以下命令：
+make GRUB_MKIMAGE=grub2-mkimage CC=i686-pc-mingw32-gcc WINDRES=i686-pc-mingw32-windres

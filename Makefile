@@ -3,6 +3,7 @@ PACKAGE = qomowin
 ICON = data/qomo-logo.ico
 REVISION = $(shell date +%Y%m%d)
 #VERSION = $(shell head -n 1 debian/changelog | sed -e "s/^$(PACKAGE) (\(.*\)).*/\1/g")
+GRUB_MKGRUB := grub-mkimage
 VERSION = 1.0.0
 WINVERSION1 = $(shell echo $(VERSION).1)
 WINVERSION2 = $(shell echo $(WINVERSION1) |tr . ,)
@@ -48,7 +49,7 @@ grublocale:
 		done
 	 for i in png video vga video_fb bitmap_scale font extcmd bitmap bufio gfxterm vbe gzio gettext; \
 		 do \
-		 cp /usr/lib/grub/i386-pc/$$i.mod nsis/boot/grub/; \
+		 cp /usr/lib/grub*/i386-pc/$$i.mod nsis/boot/grub/; \
 		 done
 
 qomowin:
@@ -64,10 +65,10 @@ winboot2:
 	cp -f data/qomoldr.cfg build/winboot/
 	tools/grubinst --grub2 --boot-file=qomoldr -o build/winboot/qomoldr.mbr
 	cd build/winboot && tar cf qomoldr.tar qomoldr.cfg
-	grub-mkimage -c data/qomoldr-bootstrap.cfg -m build/winboot/qomoldr.tar -o build/winboot/core.img \
+	$(GRUB_MKIMAGE) -c data/qomoldr-bootstrap.cfg -m build/winboot/qomoldr.tar -o build/winboot/core.img \
 		loadenv biosdisk part_msdos part_gpt fat ntfs ext2 ntfscomp iso9660 loopback search linux boot minicmd cat cpuid chain halt help ls reboot \
 		echo test configfile normal sleep memdisk tar sh
-	cat /usr/lib/grub/i386-pc/lnxboot.img build/winboot/core.img > build/winboot/qomoldr
+	cat /usr/lib/grub*/i386-pc/lnxboot.img build/winboot/core.img > build/winboot/qomoldr
 
 check_wine: tools/check_wine
 	tools/check_wine

@@ -22,6 +22,12 @@ syslinux_md5="432d016a693628ae21ca12196b052933"
 root="$(cd ${0%/*}/../;pwd)"
 export WINEPREFIX="$root"/wine
 
+if which yum >/dev/null ; then
+	pman="yum install -y "
+elif which pacman >/dev/null ; then
+	pman="pacman -S --noconfirm "
+fi
+
 download(){
 	wget -q -P /tmp -O "$2" "$1"
 	md5=$(md5sum $2)
@@ -35,7 +41,7 @@ download(){
 install_wine(){
 	if [ ! -x /usr/bin/wine -a ! -x /usr/local/bin/wine ]; then
 		echo "Installing wine..."
-		sudo pacman -S --noconfirm wine #TBD do not assume apt
+		sudo $pman wine #TBD do not assume apt
 	fi
 	#echo "Creating wine folder..."
 	#wineprefixcreate --prefix "$WINEPREFIX"
@@ -64,28 +70,28 @@ install_enumini(){
 install_zip(){
 	if [ ! -x /usr/bin/zip -a ! -x /usr/local/bin/zip ]; then
 		echo "Installing zip..."
-		sudo pacman -S --noconfirm zip #TBD do not assume apt
+		sudo $pman zip #TBD do not assume apt
 	fi
 }
 
 install_unzip(){
 	if [ ! -x /usr/bin/unzip -a ! -x /usr/local/bin/unzip ]; then
 		echo "Installing unzip..."
-		sudo pacman -S --noconfirm unzip #TBD do not assume apt
+		sudo $pman unzip #TBD do not assume apt
 	fi
 }
 
 install_png2ico(){
 	if [ ! -x /usr/bin/png2ico -a ! -x /usr/local/bin/png2ico ]; then
 		echo "Installing png2ico..."
-		sudo pacman -S --noconfirm png2ico #TBD do not assume apt
+		sudo $pman png2ico #TBD do not assume apt
 	fi
 }
 
 install_cabextract(){
 	if [ ! -x /usr/bin/cabextract -a ! -x /usr/local/bin/cabextract ]; then
 		echo "Installing cabextract..."
-		sudo pacman -S --noconfirm cabextract #TBD do not assume apt
+		sudo $pman cabextract #TBD do not assume apt
 	fi
 }
 
