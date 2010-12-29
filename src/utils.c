@@ -581,12 +581,15 @@ static BOOL getIsoPath(HWND hwnd, char* isopath)
 {
 	char szFile[MAX_PATH] = {0};
 	char *p, *p1;
+	int len;
 	SendMessage(GetDlgItem(hwnd, IDC_FILE_PATH), WM_GETTEXT, MAX_PATH, (LPARAM)szFile);
+	len = strlen(szFile) - 2;
 	memmove(szFile, szFile + 2, strlen(szFile) - 2); /* 去掉开头的盘符"X:" */
+	szFile[len] = '\0';
 
-	/* 去掉末尾的文件名，只保留路径部分 */
-	p = strrchr(szFile, '\\');
-	*++p = '\0';
+//	/* 去掉末尾的文件名，只保留路径部分 */
+//	p = strrchr(szFile, '\\');
+//	*++p = '\0';
 
 	/* 转换Windows路径为Unix路径 */
 	p = szFile;
@@ -614,8 +617,10 @@ BOOL UpdateGrubCfg(HWND hwnd)
 	LCID lcid;
 	size_t nread;
 
-	if (!getExeDir(cwd))
+	if (!getExeDir(cwd)){
+		msg_error(hwnd,"getExeDir error");
 		return FALSE;
+	}
 	snprintf(sztmp, sizeof(sztmp), "%s\\qomowin.ini", cwd);
 	GetPrivateProfileString("default", "title", "Qomo Linux LiveCD Installer", arg, MAX_PATH, sztmp);
 	strcat(txt, "set title=\""); strcat(txt, arg); strcat(txt, "\"\n");
@@ -629,12 +634,16 @@ BOOL UpdateGrubCfg(HWND hwnd)
 	GetPrivateProfileString("default", "rootflags", "liveimg nodmraid rdblacklist=b44 rdblacklist=b43 rdblacklist=ssb", arg, MAX_PATH, sztmp);
 	strcat(txt, "set rootflags=\""); strcat(txt, arg); strcat(txt, "\"\n");
 
-	if (getIsoDev(hwnd, arg) != TRUE)
-		return FALSE;
-	strcat(txt, "set iso_dev=\""); strcat(txt, arg); strcat(txt, "\"\n");
+//	if (getIsoDev(hwnd, arg) != TRUE){
+//		msg_error(hwnd,"getIsoDev error");
+//		return FALSE;
+//	}
+//	strcat(txt, "set iso_dev=\""); strcat(txt, arg); strcat(txt, "\"\n");
 	memset(arg, '\0', sizeof(arg));
-	if (getIsoPath(hwnd, arg) != TRUE)
+	if (getIsoPath(hwnd, arg) != TRUE){
+		msg_error(hwnd,"getIsoPath error");
 		return FALSE;
+	}
 	strcat(txt, "set iso_path=\""); strcat(txt, arg); strcat(txt, "\"\n");
 
 	lcid = GetUserDefaultLCID();
@@ -644,6 +653,7 @@ BOOL UpdateGrubCfg(HWND hwnd)
 	snprintf(sztmp, sizeof(sztmp), "%s\\boot\\grub\\grub.cfg", cwd); 
 	if ((fp = fopen(sztmp, "w+")) == NULL)
 	{
+		msg_error(hwnd,"open boot-grub-grub.cfg error");
 		return FALSE;
 	}
 	fwrite(txt, strlen(txt), 1, fp);
@@ -651,6 +661,7 @@ BOOL UpdateGrubCfg(HWND hwnd)
 	snprintf(sztmp, sizeof(sztmp), "%s\\grub.cfg.in", cwd);
 	if ((fp2 = fopen(sztmp, "r")) == NULL)
 	{
+		msg_error(hwnd,"open grub.cfg.in error");
 		return FALSE;
 	}
 
