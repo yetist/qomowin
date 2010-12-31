@@ -631,7 +631,7 @@ BOOL UpdateGrubCfg(HWND hwnd)
 	GetPrivateProfileString("default", "initrd", "/boot/initrd0", arg, MAX_PATH, sztmp);
 	strcat(txt, "set initrd=\""); strcat(txt, arg); strcat(txt, "\"\n");
 
-	GetPrivateProfileString("default", "rootflags", "liveimg nodmraid rdblacklist=b44 rdblacklist=b43 rdblacklist=ssb", arg, MAX_PATH, sztmp);
+	GetPrivateProfileString("default", "rootflags", "liveimg nodmraid rdblacklist=b44 rdblacklist=b43 rdblacklist=ssb selinux=0", arg, MAX_PATH, sztmp);
 	strcat(txt, "set rootflags=\""); strcat(txt, arg); strcat(txt, "\"\n");
 
 //	if (getIsoDev(hwnd, arg) != TRUE){
