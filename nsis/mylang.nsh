@@ -1,4 +1,4 @@
-; vim:set filetype=nsis 
+; vim:set filetype=nsis
 ;
 LangString _lang_qomowin  ${LANG_ENGLISH} "Install Qomo Linux"
 LangString _lang_qomowin_desc ${LANG_ENGLISH} "Qomo Linux installer for Windows"

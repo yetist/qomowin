@@ -4,17 +4,17 @@
  *
  * Copyright (C) 2010 yetist <yetist@gmail.com>
  *
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * */
@@ -31,12 +31,12 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-#include "resource.h" 
-#include "qomowin.h" 
-#include "utils.h" 
-#include "qw-debug.h" 
+#include "resource.h"
+#include "qomowin.h"
+#include "utils.h"
+#include "qw-debug.h"
 
-#define MAX_LOADSTRING	100	
+#define MAX_LOADSTRING	100
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static BOOL InitApplication(HINSTANCE hInstance);
@@ -89,7 +89,7 @@ static void CenterWindow(HWND hwnd)
 	GetWindowRect(hwnd, &rect);
 	w = rect.right - rect.left;
 	h = rect.bottom - rect.top;
-	rect.left=(scrWidth - w)/2; 
+	rect.left=(scrWidth - w)/2;
 	rect.top=(scrHeight - h)/2;
 	//设置窗体位置
 	SetWindowPos(hwnd, HWND_TOP, rect.left, rect.top, w, h, SWP_SHOWWINDOW);
@@ -170,7 +170,7 @@ static void CreateControls(HWND hwnd)
 
 	LoadString(hLangDll, IDS_APP_HOMEPAGE, szText, MAX_LOADSTRING);
 	w = dwCharW * strlen(szText);
-	hCtrl = CreateWindow("STATIC", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, 50, rect.bottom-63, w, 20, hwnd, (HMENU)IDC_STATIC, hInstance, NULL);   
+	hCtrl = CreateWindow("STATIC", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, 50, rect.bottom-63, w, 20, hwnd, (HMENU)IDC_STATIC, hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	sprintf(szText, " http://www.linux-ren.org");
@@ -179,7 +179,7 @@ static void CreateControls(HWND hwnd)
 
 	LoadString(hLangDll, IDS_APP_QUIT, szText, MAX_LOADSTRING);
 	w = dwCharW * (strlen(szText) + 4);
-	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, rect.right-85, rect.bottom-63, w, 26, hwnd, (HMENU)IDC_QUIT, hInstance, NULL);   
+	hCtrl = CreateWindow("BUTTON", szText, WS_CLIPCHILDREN|WS_CHILD|WS_VISIBLE, rect.right-85, rect.bottom-63, w, 26, hwnd, (HMENU)IDC_QUIT, hInstance, NULL);
 	SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, 0);
 
 	LoadString(hLangDll, IDS_APP_CONFIRM, szText, MAX_LOADSTRING);
@@ -192,7 +192,7 @@ static void CreateControls(HWND hwnd)
 
 	/* create progress bar */
 	GetWindowRect(hCtrl, &rect);
-	hCtrl = CreateWindowEx(0, PROGRESS_CLASS, (LPSTR)NULL, WS_CHILD | WS_VISIBLE, 1, 50, rect.right - rect.left, rect.bottom - rect.top, hwnd, (HMENU)IDC_MAIN_PROGRESS, hInstance, NULL); 
+	hCtrl = CreateWindowEx(0, PROGRESS_CLASS, (LPSTR)NULL, WS_CHILD | WS_VISIBLE, 1, 50, rect.right - rect.left, rect.bottom - rect.top, hwnd, (HMENU)IDC_MAIN_PROGRESS, hInstance, NULL);
 	SendMessage(hCtrl, PBM_SETRANGE, 0, MAKELPARAM (0,100));
 	SendMessage(hCtrl, PBM_SETPOS, (WPARAM)33, 0);
 
@@ -283,8 +283,8 @@ static void InstallMbr(HWND hwnd)
 		msg_error(hwnd, MsgInfo);
 		return;
 	}
-	 
-	/*	
+
+	/*
 	 *	OS VERSION TABLE
 	 *  OSName  | dwPlatformID | dwMajorVersion | dwMinorVersion | dwBuildNumber
 	 *  95      | 1 | 4 | 0    | 950

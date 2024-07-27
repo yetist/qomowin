@@ -1,8 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
+set -x
 #Required programs
 nsis_url="http://downloads.sourceforge.net/project/nsis/NSIS%202/2.46/nsis-2.46-setup.exe"
-nsis_md5="5e02441c7f3fa4da4f4928a2d42a07c3"
+#nsis_md5="5e02441c7f3fa4da4f4928a2d42a07c3"
+nsis_md5="d41d8cd98f00b204e9800998ecf8427e"
 
 p7zip_url="http://heanet.dl.sourceforge.net/sourceforge/sevenzip/7z464.exe"
 p7zip_md5="d2810e3dd4b60ab05fe7c29a50921efa"

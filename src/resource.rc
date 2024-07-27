@@ -56,7 +56,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #endif //_WIN32
 
 /* 字符串表 */
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_APP_FONT      	"MS Sans Serif"
     IDS_APP_TITLE	"Qomo Linux Assistant Tool"

@@ -41,7 +41,7 @@ BEGIN
 END
 
 /* ×Ö·û´®±í */
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_APP_FONT	"SimSun Sans Serif"
     IDS_APP_TITLE	"Qomo Linux ¸¨Öú¹¤¾ß"
